@@ -81,7 +81,11 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
 <p>The system generates deep, unbiased 11-section strategic research reports using Claude Opus 4.6, with <strong>35 API calls per report</strong> across 5 phases for maximum depth. It also provides a persistent chat interface with Claude Sonnet 4.6 and a knowledge base (Key Facts) for contextual memory.</p>
 
 <div class="section-new">
-<strong>Latest (Feb 25 session):</strong> Tavily web search integrated across the entire platform via shared <code>@hosage/web-search</code> npm package. 21 of 35 report steps now receive live web intelligence (54 Tavily searches per report). Chat endpoints in both Spectra and Axle detect current-events questions and inject real-time web results. Axle agent tasks (analysis, SEO, listing refresh) now grounded in current Etsy market data. All web search is non-fatal &mdash; system degrades gracefully if Tavily is unavailable.
+<strong>Latest (Feb 25):</strong> Tavily web search integrated via shared <code>@hosage/web-search</code> npm package. 21 of 35 report steps receive live web intelligence (54 Tavily searches per report). Chat endpoints in both Spectra and Axle detect current-events questions and inject real-time web results.
+</div>
+
+<div class="section-done">
+<strong>Critical Fix (Feb 25):</strong> Replaced raw <code>fetch()</code> with <code>@anthropic-ai/sdk</code> for all Claude API calls. Node.js native fetch (undici) has a <strong>known connection pool bug</strong> that kills consecutive large API requests after 4&ndash;5 calls (<a href="https://github.com/anthropics/anthropic-sdk-typescript/issues/712">SDK issue #712</a>, <a href="https://github.com/nodejs/node/issues/55330">Node.js #55330</a>). The SDK handles connection management correctly and includes patches for this exact failure mode. Also adopted <strong>pre-fetch architecture</strong>: all 54 Tavily searches run upfront before any Claude calls, completely separating HTTP workloads. Backend runs on system Node (<code>/opt/homebrew/bin/node</code>) instead of Electron&rsquo;s bundled Node for fetch reliability.
 </div>
 
 <h2>System Architecture</h2>
@@ -92,7 +96,7 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
   <tr><td>Dashboard</td><td>React 19 + Vite 7</td><td>SPA with chat, reports, file browser, key facts</td></tr>
   <tr><td>Database</td><td>SQLite + Prisma 6</td><td>6 models, auto-migrates on startup</td></tr>
   <tr><td>Chat LLM</td><td>Claude Sonnet 4.6</td><td>Primary chat. OpenAI GPT-4.1-mini fallback</td></tr>
-  <tr><td>Report LLM</td><td>Claude Opus 4.6</td><td>35 calls per report, max_tokens=16384 each</td></tr>
+  <tr><td>Report LLM</td><td>Claude Opus 4.6</td><td>35 calls via @anthropic-ai/sdk, max_tokens=16384 each</td></tr>
   <tr><td>Web Search</td><td>Tavily API</td><td>54 searches/report, 30-min TTL cache, shared package</td></tr>
   <tr><td>Color Theme</td><td>Dark + Teal</td><td>Background: #0a0e13, Accent: #00D2BE</td></tr>
 </table>
@@ -221,11 +225,11 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
 
 <h3>Web Search Integration</h3>
 <ul>
-  <li><strong>54 Tavily searches per report</strong> across 21 of 35 steps (research/data steps only)</li>
-  <li>14 synthesis/analysis steps receive no web searches &mdash; they work with already-enriched data</li>
-  <li>Results formatted as <code>== CURRENT WEB INTELLIGENCE ==</code> blocks prepended to each Claude prompt</li>
+  <li><strong>Pre-fetch architecture:</strong> ALL 54 Tavily searches run upfront before any Claude calls, completely separating HTTP workloads</li>
+  <li><strong>54 searches</strong> across 21 of 35 steps (research/data steps only). 14 synthesis steps receive no searches.</li>
+  <li>Results cached in memory, formatted as <code>== CURRENT WEB INTELLIGENCE ==</code> blocks, prepended to each Claude prompt</li>
   <li><strong>Non-fatal:</strong> if Tavily fails on any step, that step proceeds with the original prompt</li>
-  <li><strong>Cache:</strong> 30-minute TTL prevents duplicate searches across steps</li>
+  <li><strong>Cache:</strong> 30-minute TTL prevents duplicate searches</li>
   <li><strong>Credit tracking:</strong> logged to ActionLog at end of each report (<code>web_search_credits</code>)</li>
   <li><strong>Cost:</strong> ~$0.43/report (54 &times; $0.008). Free tier covers ~18 reports/month (1,000 credits)</li>
 </ul>
@@ -235,7 +239,7 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
   <li><strong>Zero vendor bias:</strong> No vendor names appear anywhere in research prompts. Claude discovers and evaluates all vendors independently. Each vendor spotlight gets equal web searches.</li>
   <li><strong>Live web intelligence:</strong> Tavily API grounds every research step in current data (2025&ndash;2026), eliminating stale training data reliance.</li>
   <li><strong>Date-anchored:</strong> Every prompt includes "As of February 2026" to ensure current data focus.</li>
-  <li><strong>Retry logic:</strong> 3 retries with 15s/30s backoff for network errors and HTTP 429/500/502/503/529.</li>
+  <li><strong>Retry logic:</strong> 5 retries with 20s exponential backoff via Anthropic SDK. Client is reset on connection errors to force fresh connections.</li>
   <li><strong>Context passing:</strong> Phase 2 receives relevant Phase 1 outputs (4K&ndash;12K chars focused summaries).</li>
   <li><strong>Rate limiting:</strong> Max 1 report per 2 rolling days, 5 per calendar month. Admin override available.</li>
   <li><strong>Estimated cost:</strong> ~$28&ndash;30 per report (Claude Opus) + ~$0.43 (Tavily) = ~$28&ndash;31 total.</li>
@@ -349,6 +353,10 @@ cd backend && npx prisma migrate dev --name description</pre>
 <ul>
   <li>Backend is ESM (<code>"type": "module"</code>) &mdash; use dynamic <code>import()</code> not <code>require()</code>. backend-runner.js is CJS bridge.</li>
   <li>Express 5 + new path-to-regexp: NO <code>app.get("*")</code> wildcards. Use <code>app.use()</code> middleware for SPA fallback.</li>
+  <li><strong>NEVER use raw <code>fetch()</code> for Claude API calls.</strong> Node.js undici has a known bug killing connections after 4&ndash;5 consecutive large requests. Always use <code>@anthropic-ai/sdk</code>.</li>
+  <li><strong>Backend runs on system Node</strong> (<code>/opt/homebrew/bin/node</code>), not Electron&rsquo;s bundled Node. Electron&rsquo;s ELECTRON_RUN_AS_NODE has unreliable fetch for sustained API workloads. <code>backend-runner.js</code> is copied to <code>app.getPath("userData")</code> at launch since system Node can&rsquo;t read from asar.</li>
+  <li><strong><code>npm link</code> / <code>file:</code> symlinks break inside Electron asar.</strong> Before each Electron build, run <code>rm -rf node_modules/@hosage/web-search && cp -R ~/Desktop/shared-utils node_modules/@hosage/web-search</code> to replace symlink with real copy.</li>
+  <li><strong>Pre-fetch web searches before Claude calls.</strong> Never interleave Tavily and Claude HTTP requests &mdash; run all searches first, cache results, then run Claude calls clean.</li>
   <li>Electron loads from <code>file://</code> &mdash; <code>window.location.hostname</code> is empty. API_BASE checks for empty string.</li>
   <li>Dashboard dist path: dev=<code>../../dashboard/dist</code>, packaged=<code>process.resourcesPath/dashboard/dist</code>. Server checks both.</li>
   <li><code>.env</code> is gitignored. Packaged app reads from <code>~/Library/Application Support/Spectra/.env</code>.</li>
@@ -356,7 +364,6 @@ cd backend && npx prisma migrate dev --name description</pre>
   <li>Dashboard uses Vite 7. Rebuild dashboard BEFORE rebuilding Electron (dashboard/dist gets bundled).</li>
   <li>Report generation takes 45&ndash;90 minutes. Use <code>caffeinate -d -i -s &amp;</code> to prevent Mac sleep during generation.</li>
   <li>Report rate limit: 1 per 2 days, 5 per month. Admin override available.</li>
-  <li><code>@hosage/web-search</code> linked via <code>npm link</code> + <code>file:</code> dep. Re-link after <code>npm install</code> if symlink breaks.</li>
   <li>Tavily free tier: 1,000 credits/month. At 54/report + chat usage, budget ~18 reports before paid tier.</li>
   <li>After changing PWA meta tags or manifest, user must delete and re-add PWA on iPhone home screen.</li>
   <li>Prisma client must be regenerated (<code>npx prisma generate</code>) if node_modules are copied from another project.</li>
@@ -395,12 +402,14 @@ cd backend && npx prisma migrate dev --name description</pre>
   <li>Created shared <code>@hosage/web-search</code> npm package with Tavily wrapper, TTL cache, and LLM formatter</li>
   <li>Linked package into both Spectra and Axle via <code>npm link</code> + <code>file:</code> dependency</li>
   <li>Created <code>search-map.js</code> with 54 targeted queries across 21 report steps</li>
-  <li>Modified <code>report-engine.js</code>: <code>runStep()</code> now accepts <code>stepKey</code>, runs <code>batchSearch()</code> + <code>formatForPrompt()</code>, injects web context before Claude prompt</li>
+  <li>Modified <code>report-engine.js</code>: pre-fetch architecture (all Tavily searches upfront, then clean Claude calls)</li>
   <li>Added Tavily credit tracking and logging at report completion</li>
-  <li>Added web search to Spectra chat (current-events keyword detection)</li>
-  <li>Added web search to Axle chat (Etsy trend/market keyword detection)</li>
+  <li>Added web search to Spectra + Axle chat endpoints (keyword detection triggers)</li>
   <li>Added web search to Axle agent tasks (analysis, SEO optimize, listing refresh)</li>
-  <li>Verified: API key working, all syntax checks pass, package resolves from both projects</li>
+  <li><strong>Diagnosed &amp; fixed critical bug:</strong> Node.js native <code>fetch()</code> (undici) dies after 4&ndash;5 consecutive large API calls due to connection pool bug. Replaced with <code>@anthropic-ai/sdk</code> which handles connection management correctly.</li>
+  <li><strong>Fixed:</strong> Backend switched to system Node (<code>/opt/homebrew/bin/node</code>) &mdash; Electron&rsquo;s ELECTRON_RUN_AS_NODE unreliable for sustained fetch workloads</li>
+  <li><strong>Fixed:</strong> <code>npm link</code> symlinks break inside Electron asar &mdash; must <code>cp -R</code> shared package before build</li>
+  <li>Password-protected project status page deployed to GitHub Pages</li>
 </ul>
 
 <h3>Session 2: Feb 24, 2026</h3>
