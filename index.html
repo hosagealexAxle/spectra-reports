@@ -78,7 +78,7 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
 
 <h2>Executive Summary</h2>
 <p><strong>SPECTRA</strong> (Strategic Physical Ecosystem: Comprehensive Threat-detection Research Agent) is an AI-powered research platform for the weapons detection industry. It runs as a macOS Electron desktop app with a Node.js + Prisma backend, Claude (Anthropic) as the primary LLM, and a React dashboard accessible both locally and remotely via Tailscale on iPhone.</p>
-<p>The system generates deep, unbiased 11-section strategic research reports using Claude Opus 4.6, with <strong>35 API calls per report</strong> across 5 phases for maximum depth. It also provides a persistent chat interface with Claude Sonnet 4.6 and a knowledge base (Key Facts) for contextual memory.</p>
+<p>The system generates deep, unbiased 11-section strategic research reports using Claude Opus 4.6, with <strong>40 API calls per report</strong> across 5 phases for maximum depth. It includes <strong>checkpoint/resume</strong> for fault tolerance, <strong>Tavily web search</strong> for current data, and a persistent chat interface with Claude Sonnet 4.6 and a knowledge base (Key Facts) for contextual memory.</p>
 
 <div class="section-new">
 <strong>Latest (Feb 25):</strong> Tavily web search integrated via shared <code>@hosage/web-search</code> npm package. 21 of 35 report steps receive live web intelligence (54 Tavily searches per report). Chat endpoints in both Spectra and Axle detect current-events questions and inject real-time web results.
@@ -96,8 +96,8 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
   <tr><td>Dashboard</td><td>React 19 + Vite 7</td><td>SPA with chat, reports, file browser, key facts</td></tr>
   <tr><td>Database</td><td>SQLite + Prisma 6</td><td>6 models, auto-migrates on startup</td></tr>
   <tr><td>Chat LLM</td><td>Claude Sonnet 4.6</td><td>Primary chat. OpenAI GPT-4.1-mini fallback</td></tr>
-  <tr><td>Report LLM</td><td>Claude Opus 4.6</td><td>35 calls via @anthropic-ai/sdk, max_tokens=16384 each</td></tr>
-  <tr><td>Web Search</td><td>Tavily API</td><td>54 searches/report, 30-min TTL cache, shared package</td></tr>
+  <tr><td>Report LLM</td><td>Claude Opus 4.6</td><td>40 calls via @anthropic-ai/sdk, max_tokens=10000 (14000 for summaries), checkpoint/resume</td></tr>
+  <tr><td>Web Search</td><td>Tavily API</td><td>54 searches/report (pre-fetched upfront), 30-min TTL cache, shared package</td></tr>
   <tr><td>Color Theme</td><td>Dark + Teal</td><td>Background: #0a0e13, Accent: #00D2BE</td></tr>
 </table>
 
@@ -389,15 +389,15 @@ cd backend && npx prisma migrate dev --name description</pre>
 <h2>Cost Summary</h2>
 <table>
   <tr><th>Item</th><th>Per Report</th><th>Per Month (3 reports)</th></tr>
-  <tr><td>Claude Opus 4.6 (35 calls)</td><td>~$28&ndash;30</td><td>~$84&ndash;90</td></tr>
+  <tr><td>Claude Opus 4.6 (40 calls)</td><td>~$10&ndash;12</td><td>~$30&ndash;36</td></tr>
   <tr><td>Tavily Web Search (54 queries)</td><td>~$0.43</td><td>~$1.30 (free tier)</td></tr>
   <tr><td>Chat (Sonnet + occasional Tavily)</td><td>&mdash;</td><td>~$2&ndash;5</td></tr>
-  <tr><td><strong>Total</strong></td><td><strong>~$29&ndash;31</strong></td><td><strong>~$87&ndash;96</strong></td></tr>
+  <tr><td><strong>Total</strong></td><td><strong>~$11&ndash;13</strong></td><td><strong>~$33&ndash;42</strong></td></tr>
 </table>
 
 <h2>Session History</h2>
 
-<h3>Session 3: Feb 25, 2026 (Current)</h3>
+<h3>Session 3: Feb 25, 2026 <span class="tag">COMPLETE</span></h3>
 <ul>
   <li>Created shared <code>@hosage/web-search</code> npm package with Tavily wrapper, TTL cache, and LLM formatter</li>
   <li>Linked package into both Spectra and Axle via <code>npm link</code> + <code>file:</code> dependency</li>
@@ -409,7 +409,12 @@ cd backend && npx prisma migrate dev --name description</pre>
   <li><strong>Diagnosed &amp; fixed critical bug:</strong> Node.js native <code>fetch()</code> (undici) dies after 4&ndash;5 consecutive large API calls due to connection pool bug. Replaced with <code>@anthropic-ai/sdk</code> which handles connection management correctly.</li>
   <li><strong>Fixed:</strong> Backend switched to system Node (<code>/opt/homebrew/bin/node</code>) &mdash; Electron&rsquo;s ELECTRON_RUN_AS_NODE unreliable for sustained fetch workloads</li>
   <li><strong>Fixed:</strong> <code>npm link</code> symlinks break inside Electron asar &mdash; must <code>cp -R</code> shared package before build</li>
-  <li>Password-protected project status page deployed to GitHub Pages</li>
+  <li><strong>Fixed:</strong> Split heavy prompts &mdash; 35 steps to 40 (A1a, A2b, B1b, B1c each split into sub-calls)</li>
+  <li><strong>Fixed:</strong> Reduced <code>max_tokens</code> from 16384 to 10000 (14000 for summaries) &mdash; cost per step: $0.80 &rarr; $0.26</li>
+  <li><strong>Added:</strong> Checkpoint/resume system &mdash; each step saves to DB, failed reports resume from last completed step</li>
+  <li><strong>Added:</strong> Auto-resume monitor &mdash; detects failures, resumes from checkpoint, auto-deploys on completion</li>
+  <li><strong>Added:</strong> Password-protected GitHub Pages for both project status and research report</li>
+  <li class="resolved"><strong>REPORT GENERATED SUCCESSFULLY</strong> &mdash; Feb 25, 4:06 PM. 40/40 steps, 1.7MB HTML, ~$10 total cost. Includes live web data from 54 Tavily searches. Auto-deployed to GitHub Pages.</li>
 </ul>
 
 <h3>Session 2: Feb 24, 2026</h3>
@@ -439,7 +444,7 @@ cd backend && npx prisma migrate dev --name description</pre>
 </ul>
 
 <div class="footer">
-  <p>SPECTRA v3 &mdash; Claude Opus Powered &mdash; 35-Call Research Engine &mdash; Tavily Web Intelligence &mdash; Key Facts Memory &mdash; File Browser &mdash; Mobile PWA</p>
+  <p>SPECTRA v3 &mdash; Claude Opus Powered &mdash; 40-Call Research Engine &mdash; Checkpoint/Resume &mdash; Tavily Web Intelligence &mdash; Key Facts Memory &mdash; File Browser &mdash; Mobile PWA</p>
   <p>Generated February 25, 2026</p>
 </div>
 
