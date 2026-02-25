@@ -30,9 +30,48 @@
   .section-new { background: #f0f7ff; border-left: 3px solid #1565c0; padding: 12px 16px; margin: 12px 0; border-radius: 0 6px 6px 0; }
   .section-done { background: #f0fff0; border-left: 3px solid #2e7d32; padding: 12px 16px; margin: 12px 0; border-radius: 0 6px 6px 0; }
   @media print { body { padding: 24px 36px; } }
+  #auth-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0e13; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+  #auth-gate .gate-box { background: #141a22; border: 1px solid #1e2a36; border-radius: 12px; padding: 40px 36px; text-align: center; max-width: 360px; width: 90%; }
+  #auth-gate h2 { color: #00D2BE; font-size: 20px; margin-bottom: 4px; }
+  #auth-gate p { color: #667; font-size: 13px; margin-bottom: 20px; }
+  #auth-gate input { width: 100%; padding: 10px 14px; border: 1px solid #1e2a36; border-radius: 6px; background: #0a0e13; color: #e0e0e0; font-size: 14px; outline: none; margin-bottom: 12px; }
+  #auth-gate input:focus { border-color: #00D2BE; }
+  #auth-gate button { width: 100%; padding: 10px; background: #00D2BE; color: #0a0e13; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  #auth-gate button:hover { background: #00b8a6; }
+  #auth-gate .error { color: #e65100; font-size: 12px; margin-top: 8px; display: none; }
+  body.locked { overflow: hidden; }
 </style>
 </head>
-<body>
+<body class="locked">
+
+<div id="auth-gate">
+  <div class="gate-box">
+    <h2>SPECTRA</h2>
+    <p>This document is password protected.</p>
+    <input type="password" id="gate-pass" placeholder="Enter password" autofocus />
+    <button onclick="checkPass()">Unlock</button>
+    <div class="error" id="gate-error">Incorrect password</div>
+  </div>
+</div>
+
+<script>
+function checkPass() {
+  var h = 0, s = document.getElementById('gate-pass').value;
+  for (var i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; }
+  if (h === 1377894183) {
+    document.getElementById('auth-gate').style.display = 'none';
+    document.body.classList.remove('locked');
+    sessionStorage.setItem('spectra-auth', '1');
+  } else {
+    document.getElementById('gate-error').style.display = 'block';
+  }
+}
+document.getElementById('gate-pass').addEventListener('keydown', function(e) { if (e.key === 'Enter') checkPass(); });
+if (sessionStorage.getItem('spectra-auth') === '1') {
+  document.getElementById('auth-gate').style.display = 'none';
+  document.body.classList.remove('locked');
+}
+</script>
 
 <h1>SPECTRA Research Platform</h1>
 <div class="subtitle">Project Status &mdash; February 25, 2026 (v3)</div>
