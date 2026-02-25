@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Spectra Project Status — February 25, 2026</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #1a1a1a; padding: 48px 56px; max-width: 850px; margin: 0 auto; line-height: 1.5; }
+  h1 { font-size: 32px; text-align: center; margin-bottom: 2px; }
+  .subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 2px solid #e0e0e0; }
+  h2 { font-size: 22px; margin-top: 32px; margin-bottom: 12px; }
+  h3 { font-size: 16px; margin-top: 20px; margin-bottom: 8px; }
+  p, li { font-size: 14px; margin-bottom: 6px; }
+  ul { padding-left: 20px; margin-bottom: 12px; }
+  li { margin-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
+  th { background: #f5f5f5; font-weight: 600; }
+  .complete { color: #2e7d32; font-weight: 600; }
+  .pending { color: #e65100; font-weight: 600; }
+  .new { color: #1565c0; font-weight: 600; }
+  .resolved { color: #2e7d32; font-weight: 600; }
+  code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 12px; font-family: 'SF Mono', Menlo, monospace; }
+  pre { background: #f5f5f5; padding: 12px; border-radius: 6px; font-size: 12px; font-family: 'SF Mono', Menlo, monospace; margin: 8px 0; overflow-x: auto; white-space: pre-wrap; }
+  .footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #e0e0e0; text-align: center; color: #999; font-size: 12px; }
+  .tag { display: inline-block; background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-right: 4px; }
+  .tag.blue { background: #e3f2fd; color: #1565c0; }
+  .tag.orange { background: #fff3e0; color: #e65100; }
+  .tag.teal { background: #e0f2f1; color: #00695c; }
+  .section-new { background: #f0f7ff; border-left: 3px solid #1565c0; padding: 12px 16px; margin: 12px 0; border-radius: 0 6px 6px 0; }
+  .section-done { background: #f0fff0; border-left: 3px solid #2e7d32; padding: 12px 16px; margin: 12px 0; border-radius: 0 6px 6px 0; }
+  @media print { body { padding: 24px 36px; } }
+</style>
+</head>
+<body>
+
+<h1>SPECTRA Research Platform</h1>
+<div class="subtitle">Project Status &mdash; February 25, 2026 (v3)</div>
+
+<h2>Executive Summary</h2>
+<p><strong>SPECTRA</strong> (Strategic Physical Ecosystem: Comprehensive Threat-detection Research Agent) is an AI-powered research platform for the weapons detection industry. It runs as a macOS Electron desktop app with a Node.js + Prisma backend, Claude (Anthropic) as the primary LLM, and a React dashboard accessible both locally and remotely via Tailscale on iPhone.</p>
+<p>The system generates deep, unbiased 11-section strategic research reports using Claude Opus 4.6, with <strong>35 API calls per report</strong> across 5 phases for maximum depth. It also provides a persistent chat interface with Claude Sonnet 4.6 and a knowledge base (Key Facts) for contextual memory.</p>
+
+<div class="section-new">
+<strong>Latest (Feb 25 session):</strong> Tavily web search integrated across the entire platform via shared <code>@hosage/web-search</code> npm package. 21 of 35 report steps now receive live web intelligence (54 Tavily searches per report). Chat endpoints in both Spectra and Axle detect current-events questions and inject real-time web results. Axle agent tasks (analysis, SEO, listing refresh) now grounded in current Etsy market data. All web search is non-fatal &mdash; system degrades gracefully if Tavily is unavailable.
+</div>
+
+<h2>System Architecture</h2>
+<table>
+  <tr><th>Component</th><th>Technology</th><th>Details</th></tr>
+  <tr><td>Desktop App</td><td>Electron 33</td><td>macOS ARM64, unsigned build</td></tr>
+  <tr><td>Backend</td><td>Express 5 (ESM)</td><td>Port 4100, binds 0.0.0.0 (Tailscale accessible)</td></tr>
+  <tr><td>Dashboard</td><td>React 19 + Vite 7</td><td>SPA with chat, reports, file browser, key facts</td></tr>
+  <tr><td>Database</td><td>SQLite + Prisma 6</td><td>6 models, auto-migrates on startup</td></tr>
+  <tr><td>Chat LLM</td><td>Claude Sonnet 4.6</td><td>Primary chat. OpenAI GPT-4.1-mini fallback</td></tr>
+  <tr><td>Report LLM</td><td>Claude Opus 4.6</td><td>35 calls per report, max_tokens=16384 each</td></tr>
+  <tr><td>Web Search</td><td>Tavily API</td><td>54 searches/report, 30-min TTL cache, shared package</td></tr>
+  <tr><td>Color Theme</td><td>Dark + Teal</td><td>Background: #0a0e13, Accent: #00D2BE</td></tr>
+</table>
+
+<h2>Shared Package: @hosage/web-search</h2>
+<p>A local npm package shared across Spectra and Axle via <code>file:</code> dependency + <code>npm link</code>.</p>
+<table>
+  <tr><th>File</th><th>Purpose</th></tr>
+  <tr><td>src/search.js</td><td><code>webSearch()</code> &mdash; single search with cache, 3-retry, credit tracking. <code>batchSearch()</code> &mdash; sequential with 200ms delay, never throws.</td></tr>
+  <tr><td>src/cache.js</td><td>In-memory TTL cache (30-min default). Key = normalized query + topic + timeRange + domains.</td></tr>
+  <tr><td>src/formatter.js</td><td><code>formatForPrompt()</code> &mdash; converts results to <code>== CURRENT WEB INTELLIGENCE ==</code> blocks for LLM injection.</td></tr>
+  <tr><td>src/index.js</td><td>Re-exports: webSearch, batchSearch, formatForPrompt, getCreditUsage, resetCreditUsage, clearCache, cacheSize</td></tr>
+</table>
+<p><strong>Dependencies:</strong> <code>@tavily/core ^0.7.1</code> | <strong>Peer:</strong> <code>pino >=9</code> (optional)</p>
+
+<h2>Repository + File Structure</h2>
+<p><strong>GitHub:</strong> Private repository | <strong>Branch:</strong> main</p>
+
+<table>
+  <tr><th>File / Folder</th><th>Contents</th></tr>
+  <tr><td>backend/src/server.js</td><td>~640 lines &mdash; Express 5 API, 20+ endpoints, chat (with web search), reports, key facts, file browser</td></tr>
+  <tr><td>backend/src/report-engine.js</td><td>~1,750 lines &mdash; 35-call report pipeline, 5-phase architecture, Tavily web intelligence injection</td></tr>
+  <tr><td>backend/src/search-map.js</td><td>~160 lines &mdash; Static map of 54 Tavily queries across 21 report steps</td></tr>
+  <tr><td>backend/prisma/schema.prisma</td><td>6 models: Thread, Message, Report, ReportRun, KeyFact, ActionLog</td></tr>
+  <tr><td>dashboard/src/App.jsx</td><td>~715 lines &mdash; Chat, reports viewer, key facts editor, file browser, progress tracking</td></tr>
+  <tr><td>dashboard/src/index.css</td><td>Dark teal theme, mobile responsive, report rendering styles</td></tr>
+  <tr><td>desktop/main.js</td><td>~135 lines &mdash; Electron entry, .env loading, health check, window config</td></tr>
+  <tr><td>desktop/backend-runner.js</td><td>~38 lines &mdash; CJS bridge, auto-migration, dynamic ESM import</td></tr>
+</table>
+
+<h3>Desktop Folders (auto-created at startup)</h3>
+<table>
+  <tr><th>Folder</th><th>Purpose</th><th>Status</th></tr>
+  <tr><td>~/Desktop/Spectra Reports</td><td>Generated research reports, project documents</td><td>Active</td></tr>
+  <tr><td>~/Desktop/Spectra Research</td><td>Reference materials, raw research files</td><td>Active</td></tr>
+</table>
+
+<h2>Database Models (6 total)</h2>
+<table>
+  <tr><th>Model</th><th>Purpose</th><th>Key Fields</th></tr>
+  <tr><td>Thread</td><td>Chat conversations</td><td>id, title, createdAt, updatedAt</td></tr>
+  <tr><td>Message</td><td>Chat messages</td><td>threadId (FK), role, content, createdAt</td></tr>
+  <tr><td>Report</td><td>Research reports</td><td>title, status, contentJson, htmlPath, sections (0&ndash;35), modelUsed, errorMsg</td></tr>
+  <tr><td>ReportRun</td><td>Report execution history</td><td>reportId (FK), status, createdAt &mdash; used for rate limiting</td></tr>
+  <tr><td>KeyFact</td><td>Persistent knowledge base</td><td>category (market/legislation/vendor/threat/note), content, source, pinned</td></tr>
+  <tr><td>ActionLog</td><td>Audit trail</td><td>type, label, detail, ok, createdAt</td></tr>
+</table>
+
+<h2>Report Engine (v3 &mdash; 35 API Calls + 54 Web Searches)</h2>
+<p>The report engine generates deep, unbiased strategic research reports using Claude Opus 4.6. Each report makes <strong>35 Claude API calls</strong> across 5 phases, with <strong>54 Tavily web searches</strong> injecting live intelligence into 21 of those steps.</p>
+
+<h3>Phase 1: Foundation Research (12 calls, 37 web searches)</h3>
+<table>
+  <tr><th>Call</th><th>Section</th><th>Focus</th><th>Searches</th></tr>
+  <tr><td>A1a</td><td rowspan="3">Industry Entity &amp; Ecosystem Mapping</td><td>Vendor landscape, market share, AI/ML vs traditional</td><td>4</td></tr>
+  <tr><td>A1b</td><td>Stadium deployments, M&amp;A, partnerships, funding</td><td>3</td></tr>
+  <tr><td>A1c</td><td>Product head-to-head comparisons, throughput rates</td><td>2</td></tr>
+  <tr><td>A2a</td><td rowspan="3">Market &amp; Vertical Demand Analysis</td><td>K-12 weapons screening, pilot results, incidents</td><td>3</td></tr>
+  <tr><td>A2b</td><td>Government buildings, hospitals, venues</td><td>3</td></tr>
+  <tr><td>A2c</td><td>Transit pilots, retail, cannabis, international</td><td>3</td></tr>
+  <tr><td>B1a</td><td rowspan="3">Statutes, Standards &amp; Mandates</td><td>SAFETY Act, federal bills, NIJ standards</td><td>3</td></tr>
+  <tr><td>B1b</td><td>TX SB 838, FL Alyssa, NY, CA, NJ, IL mandates</td><td>5</td></tr>
+  <tr><td>B1c</td><td>Tier 2 + remaining 44 states, local ordinances</td><td>2</td></tr>
+  <tr><td>B2a</td><td rowspan="3">Federal &amp; State Spending</td><td>DHS/UASI/SHSP/NSGP grants, BSCA disbursements</td><td>3</td></tr>
+  <tr><td>B2b</td><td>Vendor contracts, state cooperatives, school POs</td><td>2</td></tr>
+  <tr><td>B2c</td><td>Active RFPs, bond measures, procurement pipeline</td><td>2</td></tr>
+</table>
+
+<h3>Phase 1.5: Vendor Spotlights (6 calls, 15 web searches)</h3>
+<table>
+  <tr><th>Call</th><th>Vendor(s)</th><th>Focus</th><th>Searches</th></tr>
+  <tr><td>VS1</td><td>Evolv Technology (NYSE: EVLV)</td><td>Market leader &mdash; Express, Insight, financials, deployments</td><td>3</td></tr>
+  <tr><td>VS2</td><td>CEIA, Garrett, Leidos</td><td>Legacy OEMs &mdash; walkthrough, handheld, checkpoint</td><td>3</td></tr>
+  <tr><td>VS3</td><td>ZeroEyes</td><td>AI visual gun detection &mdash; software platform, partnerships</td><td>2</td></tr>
+  <tr><td>VS4</td><td>Liberty Defense, Xtract One</td><td>HEXWAVE mmWave, SmartGateway touchless &mdash; Canadian challengers</td><td>2</td></tr>
+  <tr><td>VS5</td><td>Athena Security, Omnilert</td><td>AI-first detection companies &mdash; market trajectory</td><td>2</td></tr>
+  <tr><td>VS6</td><td>Smiths, Rapiscan, Nuctech, + others</td><td>Remaining vendors, international &mdash; proportional coverage</td><td>3</td></tr>
+</table>
+
+<h3>Phase 2: Analysis (12 calls, 5 web searches)</h3>
+<table>
+  <tr><th>Call</th><th>Section</th><th>Focus</th><th>Searches</th></tr>
+  <tr><td>SPILL_a</td><td rowspan="3">Public-to-Private Demand Spillover</td><td>Government mandates driving private sector adoption</td><td>0</td></tr>
+  <tr><td>SPILL_b</td><td>Technology trickle-down, standards as market makers</td><td>0</td></tr>
+  <tr><td>SPILL_c</td><td>Insurance, liability, compliance-driven demand</td><td>0</td></tr>
+  <tr><td>FIELD_a</td><td rowspan="3">Field Intelligence</td><td>School board meeting minutes, pilot votes</td><td>2</td></tr>
+  <tr><td>FIELD_b</td><td>City council resolutions, deployment verification</td><td>1</td></tr>
+  <tr><td>FIELD_c</td><td>University, worship, healthcare deployment decisions</td><td>2</td></tr>
+  <tr><td>C_a</td><td rowspan="2">Combined Insights &amp; Strategy</td><td>Deployment reality check, market maturation S-curve</td><td>0</td></tr>
+  <tr><td>C_b</td><td>Competitive intelligence, M&amp;A probability, 90-day watch</td><td>0</td></tr>
+  <tr><td>C_c</td><td>Vendor Scorecard</td><td>Unified scoring, tier classification across all vendors</td><td>0</td></tr>
+  <tr><td>SRC_a</td><td rowspan="3">Sources &amp; References</td><td>Government, regulatory, industry sources</td><td>0</td></tr>
+  <tr><td>SRC_b</td><td>Company, news, academic sources</td><td>0</td></tr>
+  <tr><td>SRC_c</td><td>Local government, school board sources</td><td>0</td></tr>
+</table>
+
+<h3>Phase 2.5: Summarize (1 call, 0 web searches)</h3>
+<table>
+  <tr><th>Call</th><th>Focus</th></tr>
+  <tr><td>SUMMARY</td><td>Structured intelligence brief &mdash; top 20 findings, vendor rankings, legislative summary from all 30 prior outputs</td></tr>
+</table>
+
+<h3>Phase 3: Stitch (4 calls, 0 web searches)</h3>
+<table>
+  <tr><th>Call</th><th>Section</th><th>Focus</th></tr>
+  <tr><td>EXEC_DRAFT</td><td>Executive Summary</td><td>First draft &mdash; market snapshot, critical findings, 90-day outlook</td></tr>
+  <tr><td>EXEC_REFINE</td><td>Executive Summary</td><td>Second pass incorporating vendor scorecard + intelligence brief</td></tr>
+  <tr><td>FINAL_STITCH</td><td>Editorial</td><td>Counter-intuitive findings, blind spots, 2027&ndash;2028 thesis</td></tr>
+  <tr><td>QUALITY_CHECK</td><td>Quality Assurance</td><td>Fact-check, consistency, data freshness, coverage gaps, confidence mapping</td></tr>
+</table>
+
+<h3>Report Output: 11 Display Sections</h3>
+<ol>
+  <li><strong>Executive Summary</strong> (EXEC_REFINE)</li>
+  <li><strong>Industry Entity &amp; Ecosystem Mapping</strong> (A1a + A1b + A1c)</li>
+  <li><strong>Market &amp; Vertical Demand Analysis</strong> (A2a + A2b + A2c)</li>
+  <li><strong>Vendor Deep Dives</strong> (VS1 + VS2 + VS3 + VS4 + VS5 + VS6)</li>
+  <li><strong>Statutes, Standards &amp; Mandates</strong> (B1a + B1b + B1c)</li>
+  <li><strong>Federal &amp; State Spending &amp; Funding</strong> (B2a + B2b + B2c)</li>
+  <li><strong>Public-to-Private Demand Spillover</strong> (SPILL_a + SPILL_b + SPILL_c)</li>
+  <li><strong>Field Intelligence</strong> (FIELD_a + FIELD_b + FIELD_c)</li>
+  <li><strong>Combined Insights &amp; Strategic Analysis</strong> (C_a + C_b + C_c)</li>
+  <li><strong>Sources &amp; References + Quality Check</strong> (SRC_a + SRC_b + SRC_c + QUALITY_CHECK)</li>
+  <li><strong>Editorial: Market Outlook &amp; Closing Analysis</strong> (FINAL_STITCH)</li>
+</ol>
+
+<h3>Web Search Integration</h3>
+<ul>
+  <li><strong>54 Tavily searches per report</strong> across 21 of 35 steps (research/data steps only)</li>
+  <li>14 synthesis/analysis steps receive no web searches &mdash; they work with already-enriched data</li>
+  <li>Results formatted as <code>== CURRENT WEB INTELLIGENCE ==</code> blocks prepended to each Claude prompt</li>
+  <li><strong>Non-fatal:</strong> if Tavily fails on any step, that step proceeds with the original prompt</li>
+  <li><strong>Cache:</strong> 30-minute TTL prevents duplicate searches across steps</li>
+  <li><strong>Credit tracking:</strong> logged to ActionLog at end of each report (<code>web_search_credits</code>)</li>
+  <li><strong>Cost:</strong> ~$0.43/report (54 &times; $0.008). Free tier covers ~18 reports/month (1,000 credits)</li>
+</ul>
+
+<h3>Key Design Decisions</h3>
+<ul>
+  <li><strong>Zero vendor bias:</strong> No vendor names appear anywhere in research prompts. Claude discovers and evaluates all vendors independently. Each vendor spotlight gets equal web searches.</li>
+  <li><strong>Live web intelligence:</strong> Tavily API grounds every research step in current data (2025&ndash;2026), eliminating stale training data reliance.</li>
+  <li><strong>Date-anchored:</strong> Every prompt includes "As of February 2026" to ensure current data focus.</li>
+  <li><strong>Retry logic:</strong> 3 retries with 15s/30s backoff for network errors and HTTP 429/500/502/503/529.</li>
+  <li><strong>Context passing:</strong> Phase 2 receives relevant Phase 1 outputs (4K&ndash;12K chars focused summaries).</li>
+  <li><strong>Rate limiting:</strong> Max 1 report per 2 rolling days, 5 per calendar month. Admin override available.</li>
+  <li><strong>Estimated cost:</strong> ~$28&ndash;30 per report (Claude Opus) + ~$0.43 (Tavily) = ~$28&ndash;31 total.</li>
+  <li><strong>Generation time:</strong> ~45&ndash;90 minutes (logged automatically).</li>
+</ul>
+
+<h2>Chat Web Search</h2>
+<p>The Spectra chat endpoint detects current-events questions using keyword matching (<code>current</code>, <code>recent</code>, <code>latest</code>, <code>2025</code>, <code>2026</code>, <code>news</code>, etc.) and automatically runs a Tavily web search, injecting results into the system prompt before the LLM call.</p>
+<ul>
+  <li><strong>Max results:</strong> 3 per query</li>
+  <li><strong>Topic:</strong> news | <strong>Time range:</strong> past week</li>
+  <li><strong>Max context:</strong> 3,000 chars injected into system prompt</li>
+  <li><strong>Non-fatal:</strong> chat proceeds normally if search fails</li>
+</ul>
+
+<h2>Current System State</h2>
+<ul>
+  <li><strong>Desktop app:</strong> Spectra.app, unsigned DMG via electron-builder.</li>
+  <li><strong>Backend:</strong> Express 5 on port 4100, binds 0.0.0.0 (Tailscale accessible). Serves dashboard static files.</li>
+  <li><strong>Database:</strong> SQLite, 6 Prisma models, auto-migrates on startup.</li>
+  <li><strong>Chat LLM:</strong> Claude Sonnet 4.6 primary. OpenAI GPT-4.1-mini fallback. Auto-detects from .env.</li>
+  <li><strong>Report LLM:</strong> Claude Opus 4.6. 35 API calls, 16384 max_tokens each.</li>
+  <li><strong>Web Search:</strong> Tavily API via <code>@hosage/web-search</code> shared package. 54 searches/report + chat triggers.</li>
+  <li><strong>Key Facts:</strong> Persistent knowledge base injected into every chat. Categories: market, legislation, vendor, threat, note.</li>
+  <li><strong>File Browser:</strong> Browse Spectra Reports + Spectra Research folders. Download, upload, attach to chat.</li>
+  <li><strong>Mobile:</strong> iPhone PWA via Tailscale. PWA standalone mode enabled.</li>
+</ul>
+
+<h2>API Endpoints (20+ total)</h2>
+<h3>Health &amp; Status</h3>
+<table>
+  <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+  <tr><td>GET</td><td>/api/health</td><td>Health check + LLM info (chat model, report model)</td></tr>
+</table>
+
+<h3>Threads &amp; Chat</h3>
+<table>
+  <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+  <tr><td>GET</td><td>/api/threads</td><td>List all threads</td></tr>
+  <tr><td>POST</td><td>/api/threads</td><td>Create new thread</td></tr>
+  <tr><td>PATCH</td><td>/api/threads/:id</td><td>Rename thread</td></tr>
+  <tr><td>DELETE</td><td>/api/threads/:id</td><td>Delete thread + cascade messages</td></tr>
+  <tr><td>GET</td><td>/api/chat/thread?threadId=X</td><td>Load thread messages</td></tr>
+  <tr><td>POST</td><td>/api/chat</td><td>Send message, get Claude/OpenAI reply. Supports attachments[]. Auto web search on current-events questions.</td></tr>
+</table>
+
+<h3>Reports</h3>
+<table>
+  <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+  <tr><td>GET</td><td>/api/reports</td><td>List all reports (20 most recent)</td></tr>
+  <tr><td>GET</td><td>/api/reports/ratelimit/status</td><td>Rate limit info (runs this month, cooldown)</td></tr>
+  <tr><td>GET</td><td>/api/reports/:id</td><td>Fetch full report details + contentJson</td></tr>
+  <tr><td>GET</td><td>/api/reports/:id/status</td><td>Quick status check (for progress polling)</td></tr>
+  <tr><td>POST</td><td>/api/reports/generate</td><td>Generate new report (admin auth required)</td></tr>
+</table>
+
+<h3>Key Facts</h3>
+<table>
+  <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+  <tr><td>GET</td><td>/api/keyfacts</td><td>List key facts, optional ?category= filter</td></tr>
+  <tr><td>POST</td><td>/api/keyfacts</td><td>Create new key fact</td></tr>
+  <tr><td>DELETE</td><td>/api/keyfacts/:id</td><td>Delete key fact</td></tr>
+</table>
+
+<h3>File Browser</h3>
+<table>
+  <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+  <tr><td>GET</td><td>/api/files/folders</td><td>List allowed folders</td></tr>
+  <tr><td>GET</td><td>/api/files/browse?folder=X&amp;subPath=Y</td><td>List directory contents</td></tr>
+  <tr><td>GET</td><td>/api/files/read?folder=X&amp;filePath=Y</td><td>Serve raw file content</td></tr>
+  <tr><td>GET</td><td>/api/files/download?folder=X&amp;filePath=Y</td><td>Download file with Content-Disposition</td></tr>
+  <tr><td>POST</td><td>/api/files/upload</td><td>Upload file as base64 JSON (10MB limit)</td></tr>
+</table>
+
+<h3>Activity Log</h3>
+<table>
+  <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+  <tr><td>GET</td><td>/api/actions?take=50</td><td>Recent action log entries</td></tr>
+</table>
+
+<h2>Environment (.env)</h2>
+<table>
+  <tr><th>Variable</th><th>Value / Status</th></tr>
+  <tr><td>PORT</td><td>4100</td></tr>
+  <tr><td>DATABASE_URL</td><td>file:./spectra.db</td></tr>
+  <tr><td>ANTHROPIC_API_KEY</td><td>xxxxx</td></tr>
+  <tr><td>ANTHROPIC_CHAT_MODEL</td><td>claude-sonnet-4-6</td></tr>
+  <tr><td>ANTHROPIC_REPORT_MODEL</td><td>claude-opus-4-6</td></tr>
+  <tr><td>OPENAI_API_KEY</td><td>xxxxx</td></tr>
+  <tr><td>OPENAI_MODEL</td><td>gpt-4.1-mini</td></tr>
+  <tr><td>OPENAI_BASE_URL</td><td>https://api.openai.com/v1</td></tr>
+  <tr><td>TAVILY_API_KEY</td><td>xxxxx</td></tr>
+</table>
+
+<h2>Build + Deploy</h2>
+<pre># Rebuild dashboard
+cd dashboard && npm run build
+
+# Rebuild Electron app (unsigned)
+cd desktop && npm run dist:unsigned
+
+# Deploy
+pkill -f "Spectra"; rm -rf /Applications/Spectra.app
+cp -R desktop/release/mac-arm64/Spectra.app /Applications/
+open /Applications/Spectra.app
+
+# Prisma migration (if schema changed)
+cd backend && npx prisma migrate dev --name description</pre>
+
+<h2>Known Gotchas</h2>
+<ul>
+  <li>Backend is ESM (<code>"type": "module"</code>) &mdash; use dynamic <code>import()</code> not <code>require()</code>. backend-runner.js is CJS bridge.</li>
+  <li>Express 5 + new path-to-regexp: NO <code>app.get("*")</code> wildcards. Use <code>app.use()</code> middleware for SPA fallback.</li>
+  <li>Electron loads from <code>file://</code> &mdash; <code>window.location.hostname</code> is empty. API_BASE checks for empty string.</li>
+  <li>Dashboard dist path: dev=<code>../../dashboard/dist</code>, packaged=<code>process.resourcesPath/dashboard/dist</code>. Server checks both.</li>
+  <li><code>.env</code> is gitignored. Packaged app reads from <code>~/Library/Application Support/Spectra/.env</code>.</li>
+  <li>Auto-migration in backend-runner.js via <code>execFileSync</code> of prisma migrate deploy before server start.</li>
+  <li>Dashboard uses Vite 7. Rebuild dashboard BEFORE rebuilding Electron (dashboard/dist gets bundled).</li>
+  <li>Report generation takes 45&ndash;90 minutes. Use <code>caffeinate -d -i -s &amp;</code> to prevent Mac sleep during generation.</li>
+  <li>Report rate limit: 1 per 2 days, 5 per month. Admin override available.</li>
+  <li><code>@hosage/web-search</code> linked via <code>npm link</code> + <code>file:</code> dep. Re-link after <code>npm install</code> if symlink breaks.</li>
+  <li>Tavily free tier: 1,000 credits/month. At 54/report + chat usage, budget ~18 reports before paid tier.</li>
+  <li>After changing PWA meta tags or manifest, user must delete and re-add PWA on iPhone home screen.</li>
+  <li>Prisma client must be regenerated (<code>npx prisma generate</code>) if node_modules are copied from another project.</li>
+  <li>CORS is open (<code>origin: "*"</code>) &mdash; Tailscale provides network-level security.</li>
+</ul>
+
+<h2>Roadmap Summary</h2>
+<table>
+  <tr><th>Phase</th><th>Status</th></tr>
+  <tr><td>Phase 1: Backend + Database</td><td class="complete">COMPLETE</td></tr>
+  <tr><td>Phase 2: Dashboard UI</td><td class="complete">COMPLETE</td></tr>
+  <tr><td>Phase 3: Chat System (Claude + OpenAI)</td><td class="complete">COMPLETE</td></tr>
+  <tr><td>Phase 4: Report Engine v1 (9 calls)</td><td class="complete">COMPLETE &mdash; superseded by v2</td></tr>
+  <tr><td>Phase 5: Key Facts / Knowledge Base</td><td class="complete">COMPLETE</td></tr>
+  <tr><td>Phase 6: File Browser</td><td class="complete">COMPLETE</td></tr>
+  <tr><td>Phase 7: Electron Shell + Icon</td><td class="complete">COMPLETE</td></tr>
+  <tr><td>Phase 8: Report Engine v2 (20 calls)</td><td class="complete">COMPLETE &mdash; superseded by v3</td></tr>
+  <tr><td>Phase 9: Mobile PWA + Tailscale</td><td class="complete">COMPLETE</td></tr>
+  <tr><td>Phase 10: Report Engine v3 (35 calls)</td><td class="complete">COMPLETE &mdash; 5-phase, vendor spotlights, quality check</td></tr>
+  <tr><td>Phase 11: Tavily Web Search Integration</td><td class="complete"><span class="tag blue">NEW</span> COMPLETE</td></tr>
+</table>
+
+<h2>Cost Summary</h2>
+<table>
+  <tr><th>Item</th><th>Per Report</th><th>Per Month (3 reports)</th></tr>
+  <tr><td>Claude Opus 4.6 (35 calls)</td><td>~$28&ndash;30</td><td>~$84&ndash;90</td></tr>
+  <tr><td>Tavily Web Search (54 queries)</td><td>~$0.43</td><td>~$1.30 (free tier)</td></tr>
+  <tr><td>Chat (Sonnet + occasional Tavily)</td><td>&mdash;</td><td>~$2&ndash;5</td></tr>
+  <tr><td><strong>Total</strong></td><td><strong>~$29&ndash;31</strong></td><td><strong>~$87&ndash;96</strong></td></tr>
+</table>
+
+<h2>Session History</h2>
+
+<h3>Session 3: Feb 25, 2026 (Current)</h3>
+<ul>
+  <li>Created shared <code>@hosage/web-search</code> npm package with Tavily wrapper, TTL cache, and LLM formatter</li>
+  <li>Linked package into both Spectra and Axle via <code>npm link</code> + <code>file:</code> dependency</li>
+  <li>Created <code>search-map.js</code> with 54 targeted queries across 21 report steps</li>
+  <li>Modified <code>report-engine.js</code>: <code>runStep()</code> now accepts <code>stepKey</code>, runs <code>batchSearch()</code> + <code>formatForPrompt()</code>, injects web context before Claude prompt</li>
+  <li>Added Tavily credit tracking and logging at report completion</li>
+  <li>Added web search to Spectra chat (current-events keyword detection)</li>
+  <li>Added web search to Axle chat (Etsy trend/market keyword detection)</li>
+  <li>Added web search to Axle agent tasks (analysis, SEO optimize, listing refresh)</li>
+  <li>Verified: API key working, all syntax checks pass, package resolves from both projects</li>
+</ul>
+
+<h3>Session 2: Feb 24, 2026</h3>
+<ul>
+  <li>Rewrote report-engine.js &mdash; v3 with 35 API calls across 5 phases (was 20 in v2)</li>
+  <li>Added Phase 1.5: Vendor Spotlights (6 dedicated deep-dive calls)</li>
+  <li>Added Phase 2.5: Summary call consolidating all 30 prior outputs</li>
+  <li>Added EXEC_REFINE (2-pass executive summary) and QUALITY_CHECK (fact-check + gap ID)</li>
+  <li>Removed all vendor bias from prompts &mdash; Claude discovers vendors independently</li>
+  <li>Increased max_tokens to 16384 per call for maximum depth</li>
+  <li>Anchored every prompt to "February 2026" for current data</li>
+  <li>Added 3-retry logic with backoff for API resilience</li>
+  <li>Updated dashboard progress bar: Step X/35 with 5-phase labels</li>
+</ul>
+
+<h3>Session 1: Feb 23&ndash;24, 2026</h3>
+<ul>
+  <li>Built entire Spectra system from scratch (Phases 1&ndash;7)</li>
+  <li>Express 5 backend, React 19 dashboard, Prisma + SQLite</li>
+  <li>Claude Sonnet 4.6 chat + Opus 4.6 for reports</li>
+  <li>Report engine v1 with 9 API calls</li>
+  <li>Key Facts knowledge base with category system</li>
+  <li>File browser for Spectra Reports + Research folders</li>
+  <li>Electron app with custom icon, unsigned macOS build</li>
+  <li>PWA manifest for iPhone access via Tailscale</li>
+  <li>GitHub private repo created and initial commit pushed</li>
+</ul>
+
+<div class="footer">
+  <p>SPECTRA v3 &mdash; Claude Opus Powered &mdash; 35-Call Research Engine &mdash; Tavily Web Intelligence &mdash; Key Facts Memory &mdash; File Browser &mdash; Mobile PWA</p>
+  <p>Generated February 25, 2026</p>
+</div>
+
+</body>
+</html>
