@@ -80,8 +80,12 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
 <p><strong>SPECTRA</strong> (Strategic Physical Ecosystem: Comprehensive Threat-detection Research Agent) is an AI-powered research platform for the weapons detection industry. It runs as a macOS Electron desktop app with a Node.js + Prisma backend, Claude (Anthropic) as the primary LLM, and a React dashboard accessible both locally and remotely via Tailscale on iPhone.</p>
 <p>The system generates deep, unbiased 11-section strategic research reports using Claude Opus 4.6, with <strong>40 API calls per report</strong> across 5 phases for maximum depth. It includes <strong>checkpoint/resume</strong> for fault tolerance, <strong>Tavily web search</strong> for current data, and a persistent chat interface with Claude Sonnet 4.6 and a knowledge base (Key Facts) for contextual memory.</p>
 
+<div class="section-done">
+<strong>SUCCESS (Feb 25, 4:06 PM):</strong> Full 40-step research report generated successfully. 1.7MB HTML output with 488 section headings, live web intelligence from 54 Tavily searches, and comprehensive vendor/regulatory/field coverage. <strong>Cost: ~$4</strong> &mdash; an <strong>85% reduction</strong> from the original $28&ndash;30 estimate. Achieved through reduced <code>max_tokens</code> (16384 &rarr; 10000), prompt splitting, and the Anthropic SDK. At $4/report, all 5 monthly reports cost $20 total vs. $28 for a single report under the old engine. Checkpoint/resume system proved itself mid-run &mdash; auto-resumed from step 17 after an Anthropic 500 error with zero lost progress or wasted tokens.
+</div>
+
 <div class="section-new">
-<strong>Latest (Feb 25):</strong> Tavily web search integrated via shared <code>@hosage/web-search</code> npm package. 21 of 35 report steps receive live web intelligence (54 Tavily searches per report). Chat endpoints in both Spectra and Axle detect current-events questions and inject real-time web results.
+<strong>New (Feb 25):</strong> Tavily web search integrated via shared <code>@hosage/web-search</code> npm package. 21 of 40 report steps receive live web intelligence (54 Tavily searches per report). Chat endpoints in both Spectra and Axle detect current-events questions and inject real-time web results. Checkpoint/resume system saves progress after every step &mdash; failed reports resume from last checkpoint automatically.
 </div>
 
 <div class="section-done">
