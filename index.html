@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Spectra Project Status — February 25, 2026</title>
+<title>Spectra Project Status — March 2, 2026</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #1a1a1a; padding: 48px 56px; max-width: 850px; margin: 0 auto; line-height: 1.5; }
@@ -74,34 +74,39 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
 </script>
 
 <h1>SPECTRA Research Platform</h1>
-<div class="subtitle">Project Status &mdash; February 25, 2026 (v3)</div>
+<div class="subtitle">Project Status &mdash; March 2, 2026 (v4.2 &mdash; Security Hardening + GitHub Org)</div>
 
 <h2>Executive Summary</h2>
-<p><strong>SPECTRA</strong> (Strategic Physical Ecosystem: Comprehensive Threat-detection Research Agent) is an AI-powered research platform for the weapons detection industry. It runs as a macOS Electron desktop app with a Node.js + Prisma backend, Claude (Anthropic) as the primary LLM, and a React dashboard accessible both locally and remotely via Tailscale on iPhone.</p>
-<p>The system generates deep, unbiased 11-section strategic research reports using Claude Opus 4.6, with <strong>40 API calls per report</strong> across 5 phases for maximum depth. It includes <strong>checkpoint/resume</strong> for fault tolerance, <strong>Tavily web search</strong> for current data, and a persistent chat interface with Claude Sonnet 4.6 and a knowledge base (Key Facts) for contextual memory.</p>
+<p><strong>SPECTRA</strong> (Strategic Physical Ecosystem: Comprehensive Threat-detection Research Agent) is an AI-powered research platform for the weapons detection industry. It runs as a macOS Electron desktop app with a Node.js + Prisma backend, Claude (Anthropic) as the primary LLM, and a React dashboard accessible both locally and via <strong>Tailscale Funnel</strong> (public HTTPS) for remote testers.</p>
+<p>The system generates deep, unbiased 11-section strategic research reports using Claude Opus 4.6, with <strong>40 API calls per report</strong> across 5 phases for maximum depth. It includes <strong>checkpoint/resume</strong> for fault tolerance, <strong>Deep Fetch web intelligence</strong> (191 Tavily searches + full page extraction) for current data, and a persistent chat interface with Claude Sonnet 4.6 and a knowledge base (Key Facts) for contextual memory.</p>
 
 <div class="section-done">
-<strong>SUCCESS (Feb 25, 4:06 PM):</strong> Full 40-step research report generated successfully. 1.7MB HTML output with 488 section headings, live web intelligence from 54 Tavily searches, and comprehensive vendor/regulatory/field coverage. <strong>Cost: ~$11</strong> (session total $47.53 &rarr; $36.36) &mdash; a <strong>62% reduction</strong> from the original $28&ndash;30 estimate. Achieved through reduced <code>max_tokens</code> (16384 &rarr; 10000), prompt splitting, and the Anthropic SDK. At ~$11/report, all 5 monthly reports cost ~$55 total vs. $140+ under the old engine. Checkpoint/resume system proved itself mid-run &mdash; auto-resumed from step 17 after an Anthropic 500 error with zero lost progress or wasted tokens.
+<strong>SUCCESS (Feb 26, 3:36 AM):</strong> Deep Fetch v4 report generated successfully. 1.7MB HTML, 40/40 steps, <strong>191 Tavily searches</strong> + per-company page extraction. <strong>Cost: ~$11.91</strong> ($35.75 &rarr; $23.84). 3-phase pre-fetch: static searches with full page content (Phase 1), early A1a calls + company discovery (Phase 2), per-company deep searches + Tavily Extract for actual website pages (Phase 3). Generation time: 150 min 46 sec. Report archive now live on GitHub Pages with version history.
+</div>
+
+<div class="section-done">
+<strong>Security Hardening (Mar 1, v4.2):</strong> Full security audit and remediation. Added <code>helmet</code> middleware (secure HTTP headers). Added <code>express-rate-limit</code> on login (5 attempts/min). Restricted CORS from <code>origin: "*"</code> to explicit whitelist (localhost, 127.0.0.1, Tailscale IP, Funnel domain). Moved <code>GATE_HASH</code> from hardcoded fallback to <strong>required .env variable</strong> (server warns if missing). Moved admin report override password to hashed <code>ADMIN_OVERRIDE_HASH</code> env var with <code>crypto.timingSafeEqual()</code> (was plaintext <code>ReportMe26</code> in source). Fixed <code>minimatch</code> audit vulnerability. Generic error responses on all endpoints (no <code>err.message</code> leak). Pushed to <strong>axle-inc</strong> GitHub org (private copy). Fixed <code>@hosage/web-search</code> symlink breakage in packaged Electron &mdash; replaced <code>npm link</code> symlink with <code>cp -R</code> of actual package.
 </div>
 
 <div class="section-new">
-<strong>New (Feb 25):</strong> Tavily web search integrated via shared <code>@hosage/web-search</code> npm package. 21 of 40 report steps receive live web intelligence (54 Tavily searches per report). Chat endpoints in both Spectra and Axle detect current-events questions and inject real-time web results. Checkpoint/resume system saves progress after every step &mdash; failed reports resume from last checkpoint automatically.
+<strong>New (Feb 26&ndash;27):</strong> Tailscale Funnel remote access with server-side password authentication. SHA-256 hashed password with <code>crypto.timingSafeEqual()</code>. Cookie-based sessions (30-day HttpOnly cookie). Auth middleware runs before static file serving &mdash; blocks dashboard, API, and all assets for unauthenticated remote users. Localhost/Electron requests bypass auth. Detects Funnel-proxied requests via <code>X-Forwarded-For</code> header. Dashboard <code>API_BASE</code> fixed to use <code>window.location.origin</code> for Funnel compatibility (was hardcoding port 4100). First external beta tester connected successfully.
 </div>
 
 <div class="section-done">
-<strong>Critical Fix (Feb 25):</strong> Replaced raw <code>fetch()</code> with <code>@anthropic-ai/sdk</code> for all Claude API calls. Node.js native fetch (undici) has a <strong>known connection pool bug</strong> that kills consecutive large API requests after 4&ndash;5 calls (<a href="https://github.com/anthropics/anthropic-sdk-typescript/issues/712">SDK issue #712</a>, <a href="https://github.com/nodejs/node/issues/55330">Node.js #55330</a>). The SDK handles connection management correctly and includes patches for this exact failure mode. Also adopted <strong>pre-fetch architecture</strong>: all 54 Tavily searches run upfront before any Claude calls, completely separating HTTP workloads. Backend runs on system Node (<code>/opt/homebrew/bin/node</code>) instead of Electron&rsquo;s bundled Node for fetch reliability.
+<strong>Critical Fix (Feb 25):</strong> Replaced raw <code>fetch()</code> with <code>@anthropic-ai/sdk</code> for all Claude API calls. Node.js native fetch (undici) has a <strong>known connection pool bug</strong> that kills consecutive large API requests after 4&ndash;5 calls (<a href="https://github.com/anthropics/anthropic-sdk-typescript/issues/712">SDK issue #712</a>, <a href="https://github.com/nodejs/node/issues/55330">Node.js #55330</a>). The SDK handles connection management correctly and includes patches for this exact failure mode. Also adopted <strong>pre-fetch architecture</strong>: all Tavily searches run upfront before any Claude calls, completely separating HTTP workloads. Backend runs on system Node (<code>/opt/homebrew/bin/node</code>) instead of Electron&rsquo;s bundled Node for fetch reliability.
 </div>
 
 <h2>System Architecture</h2>
 <table>
   <tr><th>Component</th><th>Technology</th><th>Details</th></tr>
   <tr><td>Desktop App</td><td>Electron 33</td><td>macOS ARM64, unsigned build</td></tr>
-  <tr><td>Backend</td><td>Express 5 (ESM)</td><td>Port 4100, binds 0.0.0.0 (Tailscale accessible)</td></tr>
-  <tr><td>Dashboard</td><td>React 19 + Vite 7</td><td>SPA with chat, reports, file browser, key facts</td></tr>
+  <tr><td>Backend</td><td>Express 5 (ESM)</td><td>Port 4100, binds 0.0.0.0. Server-side auth gate for remote access. Dashboard served behind auth middleware. Helmet + rate limiting + restricted CORS.</td></tr>
+  <tr><td>Remote Access</td><td>Tailscale Funnel</td><td>Public HTTPS: <code>alexs-mac-mini.tailb26e42.ts.net</code>. SHA-256 password gate, 30-day cookie sessions.</td></tr>
+  <tr><td>Dashboard</td><td>React 19 + Vite 7</td><td>SPA with chat, reports, file browser, key facts. <code>API_BASE</code> uses <code>window.location.origin</code> for Funnel compatibility.</td></tr>
   <tr><td>Database</td><td>SQLite + Prisma 6</td><td>6 models, auto-migrates on startup</td></tr>
   <tr><td>Chat LLM</td><td>Claude Sonnet 4.6</td><td>Primary chat. OpenAI GPT-4.1-mini fallback</td></tr>
   <tr><td>Report LLM</td><td>Claude Opus 4.6</td><td>40 calls via @anthropic-ai/sdk, max_tokens=10000 (14000 for summaries), checkpoint/resume</td></tr>
-  <tr><td>Web Search</td><td>Tavily API</td><td>54 searches/report (pre-fetched upfront), 30-min TTL cache, shared package</td></tr>
+  <tr><td>Web Search</td><td>Tavily API</td><td>191 searches/report (3-phase deep fetch + page extraction), 30-min TTL cache, shared package</td></tr>
   <tr><td>Color Theme</td><td>Dark + Teal</td><td>Background: #0a0e13, Accent: #00D2BE</td></tr>
 </table>
 
@@ -109,21 +114,21 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
 <p>A local npm package shared across Spectra and Axle via <code>file:</code> dependency + <code>npm link</code>.</p>
 <table>
   <tr><th>File</th><th>Purpose</th></tr>
-  <tr><td>src/search.js</td><td><code>webSearch()</code> &mdash; single search with cache, 3-retry, credit tracking. <code>batchSearch()</code> &mdash; sequential with 200ms delay, never throws.</td></tr>
+  <tr><td>src/search.js</td><td><code>webSearch()</code> &mdash; single search with cache, 3-retry, credit tracking, <code>includeRawContent</code> passthrough. <code>batchSearch()</code> &mdash; sequential with 200ms delay, never throws. <code>fetchPages()</code> &mdash; Tavily Extract API wrapper for full page content (1 credit/5 URLs, chunks of 20, 3-retry).</td></tr>
   <tr><td>src/cache.js</td><td>In-memory TTL cache (30-min default). Key = normalized query + topic + timeRange + domains.</td></tr>
-  <tr><td>src/formatter.js</td><td><code>formatForPrompt()</code> &mdash; converts results to <code>== CURRENT WEB INTELLIGENCE ==</code> blocks for LLM injection.</td></tr>
-  <tr><td>src/index.js</td><td>Re-exports: webSearch, batchSearch, formatForPrompt, getCreditUsage, resetCreditUsage, clearCache, cacheSize</td></tr>
+  <tr><td>src/formatter.js</td><td><code>formatForPrompt()</code> &mdash; converts results to <code>== CURRENT WEB INTELLIGENCE ==</code> blocks (snippet-based, 500 chars/result). <code>formatDeepResults()</code> &mdash; prefers <code>rawContent</code> (full page) over snippets, <code>== DEEP WEB INTELLIGENCE ==</code> header (3,000 chars/result, 20K total).</td></tr>
+  <tr><td>src/index.js</td><td>Re-exports: webSearch, batchSearch, fetchPages, formatForPrompt, formatDeepResults, getCreditUsage, resetCreditUsage, clearCache, cacheSize</td></tr>
 </table>
 <p><strong>Dependencies:</strong> <code>@tavily/core ^0.7.1</code> | <strong>Peer:</strong> <code>pino >=9</code> (optional)</p>
 
 <h2>Repository + File Structure</h2>
-<p><strong>GitHub:</strong> Private repository | <strong>Branch:</strong> main</p>
+<p><strong>GitHub:</strong> Private repository (<code>hosagealexAxle/spectra</code>) | <strong>Copy:</strong> <code>axle-inc/spectra</code> (private) | <strong>Branch:</strong> main</p>
 
 <table>
   <tr><th>File / Folder</th><th>Contents</th></tr>
-  <tr><td>backend/src/server.js</td><td>~640 lines &mdash; Express 5 API, 20+ endpoints, chat (with web search), reports, key facts, file browser</td></tr>
-  <tr><td>backend/src/report-engine.js</td><td>~1,750 lines &mdash; 35-call report pipeline, 5-phase architecture, Tavily web intelligence injection</td></tr>
-  <tr><td>backend/src/search-map.js</td><td>~160 lines &mdash; Static map of 54 Tavily queries across 21 report steps</td></tr>
+  <tr><td>backend/src/server.js</td><td>~660 lines &mdash; Express 5 API, 23+ endpoints, server-side auth gate (SHA-256 + cookie), helmet, rate limiting, restricted CORS, chat (with web search), reports, key facts, file browser</td></tr>
+  <tr><td>backend/src/report-engine.js</td><td>~2,100 lines &mdash; 40-call report pipeline, 5-phase architecture, 3-phase deep fetch pre-fetch, company discovery, per-company page extraction</td></tr>
+  <tr><td>backend/src/search-map.js</td><td>~275 lines &mdash; Static map of 57 Tavily queries across 26 steps + COMPANY_REGISTRY (17 vendors), generateCompanyQueries(), DEEP_SEARCH_MAP (legislation/grants)</td></tr>
   <tr><td>backend/prisma/schema.prisma</td><td>6 models: Thread, Message, Report, ReportRun, KeyFact, ActionLog</td></tr>
   <tr><td>dashboard/src/App.jsx</td><td>~715 lines &mdash; Chat, reports viewer, key facts editor, file browser, progress tracking</td></tr>
   <tr><td>dashboard/src/index.css</td><td>Dark teal theme, mobile responsive, report rendering styles</td></tr>
@@ -149,52 +154,71 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
   <tr><td>ActionLog</td><td>Audit trail</td><td>type, label, detail, ok, createdAt</td></tr>
 </table>
 
-<h2>Report Engine (v3 &mdash; 35 API Calls + 54 Web Searches)</h2>
-<p>The report engine generates deep, unbiased strategic research reports using Claude Opus 4.6. Each report makes <strong>35 Claude API calls</strong> across 5 phases, with <strong>54 Tavily web searches</strong> injecting live intelligence into 21 of those steps.</p>
+<h2>Report Engine (v4 &mdash; 40 API Calls + 191 Web Searches + Page Extraction)</h2>
+<p>The report engine generates deep, unbiased strategic research reports using Claude Opus 4.6. Each report makes <strong>40 Claude API calls</strong> across 5 phases. Web intelligence is gathered in a <strong>3-phase Deep Fetch</strong> pre-fetch that runs ~191 Tavily searches + full page extraction from vendor websites before any Claude calls begin.</p>
 
-<h3>Phase 1: Foundation Research (12 calls, 37 web searches)</h3>
+<h3>Deep Fetch Pre-Fetch (3 phases, ~6 min, ~191 Tavily credits)</h3>
 <table>
-  <tr><th>Call</th><th>Section</th><th>Focus</th><th>Searches</th></tr>
-  <tr><td>A1a</td><td rowspan="3">Industry Entity &amp; Ecosystem Mapping</td><td>Vendor landscape, market share, AI/ML vs traditional</td><td>4</td></tr>
-  <tr><td>A1b</td><td>Stadium deployments, M&amp;A, partnerships, funding</td><td>3</td></tr>
-  <tr><td>A1c</td><td>Product head-to-head comparisons, throughput rates</td><td>2</td></tr>
-  <tr><td>A2a</td><td rowspan="3">Market &amp; Vertical Demand Analysis</td><td>K-12 weapons screening, pilot results, incidents</td><td>3</td></tr>
-  <tr><td>A2b</td><td>Government buildings, hospitals, venues</td><td>3</td></tr>
-  <tr><td>A2c</td><td>Transit pilots, retail, cannabis, international</td><td>3</td></tr>
-  <tr><td>B1a</td><td rowspan="3">Statutes, Standards &amp; Mandates</td><td>SAFETY Act, federal bills, NIJ standards</td><td>3</td></tr>
-  <tr><td>B1b</td><td>TX SB 838, FL Alyssa, NY, CA, NJ, IL mandates</td><td>5</td></tr>
-  <tr><td>B1c</td><td>Tier 2 + remaining 44 states, local ordinances</td><td>2</td></tr>
-  <tr><td>B2a</td><td rowspan="3">Federal &amp; State Spending</td><td>DHS/UASI/SHSP/NSGP grants, BSCA disbursements</td><td>3</td></tr>
-  <tr><td>B2b</td><td>Vendor contracts, state cooperatives, school POs</td><td>2</td></tr>
-  <tr><td>B2c</td><td>Active RFPs, bond measures, procurement pipeline</td><td>2</td></tr>
+  <tr><th>Phase</th><th>What It Does</th><th>Searches</th><th>Credits</th></tr>
+  <tr><td>Phase 1: Static</td><td>Same 26 SEARCH_MAP keys, upgraded with <code>includeRawContent: "markdown"</code> (full page text at zero extra cost), <code>maxResults: 8</code>, formatted at 8,000 chars/step</td><td>~57</td><td>57</td></tr>
+  <tr><td>Phase 2: A1a Early</td><td>Runs A1a_1 + A1a_2 Claude calls early. Parses output to discover companies NOT in seed registry. <code>discoverNewCompanies()</code> extracts up to 8 additional vendors from markdown tables.</td><td>0</td><td>0</td></tr>
+  <tr><td>Phase 3: Deep Fetch</td><td>Per-company targeted searches (4&ndash;5 queries each, ~17+ companies). Collects top URLs from company domains. Calls <code>fetchPages()</code> (Tavily Extract) for full website content. Deep legislation/grants searches with <code>searchDepth: "advanced"</code>.</td><td>~85 + ~8 deep</td><td>~134</td></tr>
 </table>
 
-<h3>Phase 1.5: Vendor Spotlights (6 calls, 15 web searches)</h3>
+<h3>Company Registry</h3>
+<p>17 seed vendors, each gets identical queries (zero bias). <code>generateCompanyQueries()</code> returns 4&ndash;5 searches per company: products, deployments, new launches, contract awards, earnings (if public). Up to 8 additional companies discovered dynamically from A1a output.</p>
+
+<h3>Context Injection</h3>
+<ul>
+  <li><strong>VS steps:</strong> A1aContext (6,000 chars) + per-company deep-fetched search results + extracted company website pages</li>
+  <li><strong>B1 steps:</strong> Static web cache + deep legislation cache (advanced search)</li>
+  <li><strong>B2 steps:</strong> Static web cache + deep grants cache (advanced search)</li>
+  <li><strong>All other steps:</strong> Static web cache (8,000 chars/step with rawContent)</li>
+</ul>
+
+<h3>Phase 1: Foundation Research (17 calls)</h3>
 <table>
-  <tr><th>Call</th><th>Vendor(s)</th><th>Focus</th><th>Searches</th></tr>
-  <tr><td>VS1</td><td>Evolv Technology (NYSE: EVLV)</td><td>Market leader &mdash; Express, Insight, financials, deployments</td><td>3</td></tr>
-  <tr><td>VS2</td><td>CEIA, Garrett, Leidos</td><td>Legacy OEMs &mdash; walkthrough, handheld, checkpoint</td><td>3</td></tr>
-  <tr><td>VS3</td><td>ZeroEyes</td><td>AI visual gun detection &mdash; software platform, partnerships</td><td>2</td></tr>
-  <tr><td>VS4</td><td>Liberty Defense, Xtract One</td><td>HEXWAVE mmWave, SmartGateway touchless &mdash; Canadian challengers</td><td>2</td></tr>
-  <tr><td>VS5</td><td>Athena Security, Omnilert</td><td>AI-first detection companies &mdash; market trajectory</td><td>2</td></tr>
-  <tr><td>VS6</td><td>Smiths, Rapiscan, Nuctech, + others</td><td>Remaining vendors, international &mdash; proportional coverage</td><td>3</td></tr>
+  <tr><th>Call</th><th>Section</th><th>Focus</th><th>Web Context</th></tr>
+  <tr><td>A1a (run early)</td><td rowspan="3">Industry Entity &amp; Ecosystem Mapping</td><td>Vendor landscape, market share, AI/ML vs traditional</td><td>Static + rawContent</td></tr>
+  <tr><td>A1b</td><td>Stadium deployments, M&amp;A, partnerships, funding</td><td>Static + rawContent</td></tr>
+  <tr><td>A1c</td><td>Product head-to-head comparisons, throughput rates</td><td>Static + rawContent</td></tr>
+  <tr><td>A2a</td><td rowspan="3">Market &amp; Vertical Demand Analysis</td><td>K-12 weapons screening, pilot results, incidents</td><td>Static + rawContent</td></tr>
+  <tr><td>A2b</td><td>Government buildings, hospitals, venues</td><td>Static + rawContent</td></tr>
+  <tr><td>A2c</td><td>Transit pilots, retail, cannabis, international</td><td>Static + rawContent</td></tr>
+  <tr><td>B1a</td><td rowspan="3">Statutes, Standards &amp; Mandates</td><td>SAFETY Act, federal bills, NIJ standards</td><td>Static + deep legislation</td></tr>
+  <tr><td>B1b</td><td>TX SB 838, FL Alyssa, NY, CA, NJ, IL mandates</td><td>Static + deep legislation</td></tr>
+  <tr><td>B1c</td><td>Tier 2 + remaining 44 states, local ordinances</td><td>Static + deep legislation</td></tr>
+  <tr><td>B2a</td><td rowspan="3">Federal &amp; State Spending</td><td>DHS/UASI/SHSP/NSGP grants, BSCA disbursements</td><td>Static + deep grants</td></tr>
+  <tr><td>B2b</td><td>Vendor contracts, state cooperatives, school POs</td><td>Static + deep grants</td></tr>
+  <tr><td>B2c</td><td>Active RFPs, bond measures, procurement pipeline</td><td>Static + deep grants</td></tr>
 </table>
 
-<h3>Phase 2: Analysis (12 calls, 5 web searches)</h3>
+<h3>Phase 1.5: Vendor Spotlights (6 calls &mdash; deep company data injected)</h3>
 <table>
-  <tr><th>Call</th><th>Section</th><th>Focus</th><th>Searches</th></tr>
-  <tr><td>SPILL_a</td><td rowspan="3">Public-to-Private Demand Spillover</td><td>Government mandates driving private sector adoption</td><td>0</td></tr>
-  <tr><td>SPILL_b</td><td>Technology trickle-down, standards as market makers</td><td>0</td></tr>
-  <tr><td>SPILL_c</td><td>Insurance, liability, compliance-driven demand</td><td>0</td></tr>
-  <tr><td>FIELD_a</td><td rowspan="3">Field Intelligence</td><td>School board meeting minutes, pilot votes</td><td>2</td></tr>
-  <tr><td>FIELD_b</td><td>City council resolutions, deployment verification</td><td>1</td></tr>
-  <tr><td>FIELD_c</td><td>University, worship, healthcare deployment decisions</td><td>2</td></tr>
-  <tr><td>C_a</td><td rowspan="2">Combined Insights &amp; Strategy</td><td>Deployment reality check, market maturation S-curve</td><td>0</td></tr>
-  <tr><td>C_b</td><td>Competitive intelligence, M&amp;A probability, 90-day watch</td><td>0</td></tr>
-  <tr><td>C_c</td><td>Vendor Scorecard</td><td>Unified scoring, tier classification across all vendors</td><td>0</td></tr>
-  <tr><td>SRC_a</td><td rowspan="3">Sources &amp; References</td><td>Government, regulatory, industry sources</td><td>0</td></tr>
-  <tr><td>SRC_b</td><td>Company, news, academic sources</td><td>0</td></tr>
-  <tr><td>SRC_c</td><td>Local government, school board sources</td><td>0</td></tr>
+  <tr><th>Call</th><th>Vendor(s)</th><th>Focus</th><th>Deep Fetch Data</th></tr>
+  <tr><td>VS1</td><td>Evolv Technology (NYSE: EVLV)</td><td>Market leader &mdash; Express, Insight, financials, deployments</td><td>A1a + Evolv searches + evolv.com pages</td></tr>
+  <tr><td>VS2</td><td>CEIA, Garrett, Leidos</td><td>Legacy OEMs &mdash; walkthrough, handheld, checkpoint</td><td>A1a + per-company searches + pages</td></tr>
+  <tr><td>VS3</td><td>ZeroEyes</td><td>AI visual gun detection &mdash; software platform, partnerships</td><td>A1a + ZeroEyes searches + zeroeyes.com pages</td></tr>
+  <tr><td>VS4</td><td>Liberty Defense, Xtract One</td><td>HEXWAVE mmWave, SmartGateway touchless &mdash; Canadian challengers</td><td>A1a + per-company searches + pages</td></tr>
+  <tr><td>VS5</td><td>Athena Security, Omnilert</td><td>AI-first detection companies &mdash; market trajectory</td><td>A1a + per-company searches + pages</td></tr>
+  <tr><td>VS6</td><td>Smiths, Rapiscan, Nuctech, + others</td><td>Remaining vendors, international &mdash; proportional coverage</td><td>A1a + per-company searches + pages</td></tr>
+</table>
+
+<h3>Phase 2: Analysis (12 calls)</h3>
+<table>
+  <tr><th>Call</th><th>Section</th><th>Focus</th></tr>
+  <tr><td>SPILL_a</td><td rowspan="3">Public-to-Private Demand Spillover</td><td>Government mandates driving private sector adoption</td></tr>
+  <tr><td>SPILL_b</td><td>Technology trickle-down, standards as market makers</td></tr>
+  <tr><td>SPILL_c</td><td>Insurance, liability, compliance-driven demand</td></tr>
+  <tr><td>FIELD_a</td><td rowspan="3">Field Intelligence</td><td>School board meeting minutes, pilot votes (+ static web cache)</td></tr>
+  <tr><td>FIELD_b</td><td>City council resolutions, deployment verification (+ static web cache)</td></tr>
+  <tr><td>FIELD_c</td><td>University, worship, healthcare deployment decisions (+ static web cache)</td></tr>
+  <tr><td>C_a</td><td rowspan="2">Combined Insights &amp; Strategy</td><td>Deployment reality check, market maturation S-curve</td></tr>
+  <tr><td>C_b</td><td>Competitive intelligence, M&amp;A probability, 90-day watch</td></tr>
+  <tr><td>C_c</td><td>Vendor Scorecard</td><td>Unified scoring, tier classification across all vendors</td></tr>
+  <tr><td>SRC_a</td><td rowspan="3">Sources &amp; References</td><td>Government, regulatory, industry sources</td></tr>
+  <tr><td>SRC_b</td><td>Company, news, academic sources</td></tr>
+  <tr><td>SRC_c</td><td>Local government, school board sources</td></tr>
 </table>
 
 <h3>Phase 2.5: Summarize (1 call, 0 web searches)</h3>
@@ -227,15 +251,18 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
   <li><strong>Editorial: Market Outlook &amp; Closing Analysis</strong> (FINAL_STITCH)</li>
 </ol>
 
-<h3>Web Search Integration</h3>
+<h3>Web Search Integration (Deep Fetch v4)</h3>
 <ul>
-  <li><strong>Pre-fetch architecture:</strong> ALL 54 Tavily searches run upfront before any Claude calls, completely separating HTTP workloads</li>
-  <li><strong>54 searches</strong> across 21 of 35 steps (research/data steps only). 14 synthesis steps receive no searches.</li>
-  <li>Results cached in memory, formatted as <code>== CURRENT WEB INTELLIGENCE ==</code> blocks, prepended to each Claude prompt</li>
+  <li><strong>3-phase pre-fetch architecture:</strong> ALL Tavily searches + page extractions run upfront before Claude calls, completely separating HTTP workloads</li>
+  <li><strong>~191 Tavily credits</strong> per report: ~57 static searches + ~85 per-company searches + ~14 extract credits + ~8 deep advanced searches + ~15 discovered company searches</li>
+  <li><strong><code>includeRawContent: "markdown"</code></strong> on all searches &mdash; gets full page text at zero extra credit cost (free Tavily feature)</li>
+  <li><strong><code>fetchPages()</code></strong> via Tavily Extract API &mdash; pulls full content from vendor websites (1 credit per 5 URLs)</li>
+  <li><strong><code>discoverNewCompanies()</code></strong> &mdash; parses A1a output to find companies not in seed registry, generates targeted queries for each</li>
+  <li>Results formatted as <code>== DEEP WEB INTELLIGENCE ==</code> blocks (rawContent preferred) or <code>== EXTRACTED COMPANY PAGES ==</code> for page extractions</li>
   <li><strong>Non-fatal:</strong> if Tavily fails on any step, that step proceeds with the original prompt</li>
   <li><strong>Cache:</strong> 30-minute TTL prevents duplicate searches</li>
   <li><strong>Credit tracking:</strong> logged to ActionLog at end of each report (<code>web_search_credits</code>)</li>
-  <li><strong>Cost:</strong> ~$0.43/report (54 &times; $0.008). Free tier covers ~18 reports/month (1,000 credits)</li>
+  <li><strong>Cost:</strong> ~$1.91/report (191 credits &times; $0.01). Free tier covers ~5 reports/month (1,000 credits).</li>
 </ul>
 
 <h3>Key Design Decisions</h3>
@@ -244,10 +271,10 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
   <li><strong>Live web intelligence:</strong> Tavily API grounds every research step in current data (2025&ndash;2026), eliminating stale training data reliance.</li>
   <li><strong>Date-anchored:</strong> Every prompt includes "As of February 2026" to ensure current data focus.</li>
   <li><strong>Retry logic:</strong> 5 retries with 20s exponential backoff via Anthropic SDK. Client is reset on connection errors to force fresh connections.</li>
-  <li><strong>Context passing:</strong> Phase 2 receives relevant Phase 1 outputs (4K&ndash;12K chars focused summaries).</li>
+  <li><strong>Context passing:</strong> Phase 2 receives relevant Phase 1 outputs (4K&ndash;12K chars focused summaries). VS steps receive 6K A1aContext + per-company deep-fetched data.</li>
   <li><strong>Rate limiting:</strong> Max 1 report per 2 rolling days, 5 per calendar month. Admin override available.</li>
-  <li><strong>Estimated cost:</strong> ~$28&ndash;30 per report (Claude Opus) + ~$0.43 (Tavily) = ~$28&ndash;31 total.</li>
-  <li><strong>Generation time:</strong> ~45&ndash;90 minutes (logged automatically).</li>
+  <li><strong>Estimated cost:</strong> ~$10 per report (Claude Opus) + ~$1.91 (Tavily Deep Fetch) = ~$12 total.</li>
+  <li><strong>Generation time:</strong> ~150 minutes (6 min pre-fetch + ~145 min Claude calls).</li>
 </ul>
 
 <h2>Chat Web Search</h2>
@@ -265,11 +292,12 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
   <li><strong>Backend:</strong> Express 5 on port 4100, binds 0.0.0.0 (Tailscale accessible). Serves dashboard static files.</li>
   <li><strong>Database:</strong> SQLite, 6 Prisma models, auto-migrates on startup.</li>
   <li><strong>Chat LLM:</strong> Claude Sonnet 4.6 primary. OpenAI GPT-4.1-mini fallback. Auto-detects from .env.</li>
-  <li><strong>Report LLM:</strong> Claude Opus 4.6. 35 API calls, 16384 max_tokens each.</li>
-  <li><strong>Web Search:</strong> Tavily API via <code>@hosage/web-search</code> shared package. 54 searches/report + chat triggers.</li>
+  <li><strong>Report LLM:</strong> Claude Opus 4.6. 40 API calls, max_tokens=10000 (14000 for summaries), checkpoint/resume.</li>
+  <li><strong>Web Search:</strong> Tavily API via <code>@hosage/web-search</code> shared package. 191 searches/report (Deep Fetch v4) + page extraction + chat triggers.</li>
   <li><strong>Key Facts:</strong> Persistent knowledge base injected into every chat. Categories: market, legislation, vendor, threat, note.</li>
   <li><strong>File Browser:</strong> Browse Spectra Reports + Spectra Research folders. Download, upload, attach to chat.</li>
   <li><strong>Mobile:</strong> iPhone PWA via Tailscale. PWA standalone mode enabled.</li>
+  <li><strong>Remote Access:</strong> Tailscale Funnel live at <code>alexs-mac-mini.tailb26e42.ts.net</code>. Server-side SHA-256 password gate + cookie auth. First external beta tester connected Feb 27.</li>
 </ul>
 
 <h2>API Endpoints (20+ total)</h2>
@@ -277,6 +305,14 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
 <table>
   <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
   <tr><td>GET</td><td>/api/health</td><td>Health check + LLM info (chat model, report model)</td></tr>
+</table>
+
+<h3>Authentication (Remote Access)</h3>
+<table>
+  <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+  <tr><td>POST</td><td>/api/auth/login</td><td>Validate password (SHA-256 + timingSafeEqual), set HttpOnly cookie</td></tr>
+  <tr><td>GET</td><td>/api/auth/check</td><td>Check if session is authenticated</td></tr>
+  <tr><td>POST</td><td>/api/auth/logout</td><td>Clear auth cookie</td></tr>
 </table>
 
 <h3>Threads &amp; Chat</h3>
@@ -336,10 +372,16 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
   <tr><td>OPENAI_MODEL</td><td>gpt-4.1-mini</td></tr>
   <tr><td>OPENAI_BASE_URL</td><td>https://api.openai.com/v1</td></tr>
   <tr><td>TAVILY_API_KEY</td><td>xxxxx</td></tr>
+  <tr><td>GATE_HASH</td><td>SHA-256 hash of remote access password (<strong>required</strong> &mdash; no hardcoded fallback)</td></tr>
+  <tr><td>ADMIN_OVERRIDE_HASH</td><td><span class="tag blue">NEW v4.2</span> SHA-256 hash of admin report-generation override password (was plaintext in source)</td></tr>
 </table>
 
 <h2>Build + Deploy</h2>
-<pre># Rebuild dashboard
+<pre># CRITICAL: Copy shared-utils into backend (symlinks break in asar)
+cd backend && rm -rf node_modules/@hosage/web-search
+cp -R ~/Desktop/shared-utils node_modules/@hosage/web-search
+
+# Rebuild dashboard
 cd dashboard && npm run build
 
 # Rebuild Electron app (unsigned)
@@ -366,12 +408,22 @@ cd backend && npx prisma migrate dev --name description</pre>
   <li><code>.env</code> is gitignored. Packaged app reads from <code>~/Library/Application Support/Spectra/.env</code>.</li>
   <li>Auto-migration in backend-runner.js via <code>execFileSync</code> of prisma migrate deploy before server start.</li>
   <li>Dashboard uses Vite 7. Rebuild dashboard BEFORE rebuilding Electron (dashboard/dist gets bundled).</li>
-  <li>Report generation takes 45&ndash;90 minutes. Use <code>caffeinate -d -i -s &amp;</code> to prevent Mac sleep during generation.</li>
-  <li>Report rate limit: 1 per 2 days, 5 per month. Admin override available.</li>
-  <li>Tavily free tier: 1,000 credits/month. At 54/report + chat usage, budget ~18 reports before paid tier.</li>
+  <li>Report generation takes ~150 minutes (6 min pre-fetch + ~145 min Claude calls). Use <code>caffeinate -d -i -s &amp;</code> to prevent Mac sleep during generation.</li>
+  <li>Report rate limit: 1 per 2 days, 5 per month. Admin override: user=<code>admin</code>, password hash stored in <code>ADMIN_OVERRIDE_HASH</code> env var (no plaintext in source).</li>
+  <li>Tavily free tier: 1,000 credits/month. At ~191/report (Deep Fetch) + chat usage, budget ~5 reports before paid tier.</li>
+  <li><strong>Step counter goes +2 over TOTAL_STEPS</strong> during generation (A1a_1 and A1a_2 increment in Phase 2 pre-fetch, then skip-as-cached in Phase 1). Final DB record correctly shows 40. Cosmetic only.</li>
   <li>After changing PWA meta tags or manifest, user must delete and re-add PWA on iPhone home screen.</li>
   <li>Prisma client must be regenerated (<code>npx prisma generate</code>) if node_modules are copied from another project.</li>
-  <li>CORS is open (<code>origin: "*"</code>) &mdash; Tailscale provides network-level security.</li>
+  <li>CORS is restricted to explicit origins: <code>localhost:4100</code>, <code>127.0.0.1:4100</code>, Tailscale IP (<code>100.84.51.101:4100</code>), and Funnel domain. Update whitelist in server.js when adding new access points.</li>
+  <li><strong>Tailscale Funnel proxies through localhost.</strong> Auth middleware must check <code>X-Forwarded-For</code> header to distinguish real local (Electron) requests from Funnel-proxied remote requests. Without this check, Funnel bypasses the password gate.</li>
+  <li><strong>Auth middleware must run BEFORE <code>express.static</code>.</strong> Otherwise static dashboard files (HTML/JS/CSS) are served without authentication and only API calls are blocked.</li>
+  <li><strong>Dashboard <code>API_BASE</code> must use <code>window.location.origin</code></strong> for remote access. Hardcoding port 4100 fails through Funnel (which serves on port 443).</li>
+  <li><strong>Funnel requires Terminal window</strong> to stay open (unless started with <code>--bg</code> flag). Mac must stay awake (use <code>caffeinate</code>). Spectra.app must be running.</li>
+  <li><strong>Start Funnel:</strong> <code>/Applications/Tailscale.app/Contents/MacOS/Tailscale funnel 4100</code>. Stop: <code>Ctrl+C</code> or <code>funnel --bg off</code>.</li>
+  <li><strong>GATE_HASH is now required.</strong> No hardcoded fallback. If missing from .env, server logs a warning and rejects all remote login attempts. Set in both <code>backend/.env</code> and <code>~/Library/Application Support/Spectra/.env</code>.</li>
+  <li><strong>ADMIN_OVERRIDE_HASH</strong> replaces plaintext <code>ReportMe26</code>. Pre-hash with SHA-256 and store hex in .env. Uses <code>crypto.timingSafeEqual()</code> for constant-time comparison.</li>
+  <li><strong>Login rate limited:</strong> 5 attempts per minute per IP via <code>express-rate-limit</code>. Returns <code>429 Too Many Requests</code> after threshold.</li>
+  <li><strong><code>@hosage/web-search</code> must be a real copy, not a symlink.</strong> Before every Electron build: <code>cd backend && rm -rf node_modules/@hosage/web-search && cp -R ~/Desktop/shared-utils node_modules/@hosage/web-search</code>. Symlinks break inside asar archives.</li>
 </ul>
 
 <h2>Roadmap Summary</h2>
@@ -386,20 +438,74 @@ cd backend && npx prisma migrate dev --name description</pre>
   <tr><td>Phase 7: Electron Shell + Icon</td><td class="complete">COMPLETE</td></tr>
   <tr><td>Phase 8: Report Engine v2 (20 calls)</td><td class="complete">COMPLETE &mdash; superseded by v3</td></tr>
   <tr><td>Phase 9: Mobile PWA + Tailscale</td><td class="complete">COMPLETE</td></tr>
-  <tr><td>Phase 10: Report Engine v3 (35 calls)</td><td class="complete">COMPLETE &mdash; 5-phase, vendor spotlights, quality check</td></tr>
-  <tr><td>Phase 11: Tavily Web Search Integration</td><td class="complete"><span class="tag blue">NEW</span> COMPLETE</td></tr>
+  <tr><td>Phase 10: Report Engine v3 (40 calls)</td><td class="complete">COMPLETE &mdash; 5-phase, vendor spotlights, quality check</td></tr>
+  <tr><td>Phase 11: Tavily Web Search Integration</td><td class="complete">COMPLETE</td></tr>
+  <tr><td>Phase 12: Deep Fetch v4 (191 searches + page extraction)</td><td class="complete">COMPLETE &mdash; 3-phase pre-fetch, company registry, website extraction, versioned report archive</td></tr>
+  <tr><td>Phase 13: Remote Access + Beta Testing</td><td class="complete">COMPLETE &mdash; Tailscale Funnel, server-side auth (SHA-256 + cookies), API_BASE fix, first external tester</td></tr>
+  <tr><td>Phase 14: Security Hardening + GitHub Org</td><td class="complete"><span class="tag blue">NEW</span> COMPLETE &mdash; helmet, rate limiting, CORS restriction, env-only secrets, generic errors, axle-inc GitHub org</td></tr>
 </table>
 
 <h2>Cost Summary</h2>
 <table>
   <tr><th>Item</th><th>Per Report</th><th>Per Month (3 reports)</th></tr>
-  <tr><td>Claude Opus 4.6 (40 calls)</td><td>~$11</td><td>~$55</td></tr>
-  <tr><td>Tavily Web Search (54 queries)</td><td>~$0.43</td><td>~$1.30 (free tier)</td></tr>
+  <tr><td>Claude Opus 4.6 (40 calls)</td><td>~$10</td><td>~$30</td></tr>
+  <tr><td>Tavily Deep Fetch (191 credits)</td><td>~$1.91</td><td>~$5.73</td></tr>
   <tr><td>Chat (Sonnet + occasional Tavily)</td><td>&mdash;</td><td>~$2&ndash;5</td></tr>
-  <tr><td><strong>Total</strong></td><td><strong>~$11</strong></td><td><strong>~$57&ndash;60</strong></td></tr>
+  <tr><td><strong>Total</strong></td><td><strong>~$12</strong></td><td><strong>~$38&ndash;41</strong></td></tr>
 </table>
+<p><strong>Actual measured:</strong> Feb 26 report cost $11.91 ($35.75 &rarr; $23.84). Feb 25 report cost ~$11.17.</p>
 
 <h2>Session History</h2>
+
+<h3>Session 6: Mar 1, 2026 <span class="tag">COMPLETE</span></h3>
+<ul>
+  <li><strong>Full security audit:</strong> Scanned codebase for OWASP top 10 vulnerabilities, secrets exposure, and misconfigurations.</li>
+  <li><strong>Helmet middleware:</strong> Added <code>helmet</code> for secure HTTP headers (X-Content-Type-Options, X-Frame-Options, Strict-Transport-Security, etc.).</li>
+  <li><strong>Rate limiting:</strong> Added <code>express-rate-limit</code> on login endpoint &mdash; 5 attempts per minute per IP. Prevents brute-force password attacks.</li>
+  <li><strong>CORS restriction:</strong> Replaced <code>origin: "*"</code> with explicit whitelist: <code>localhost:4100</code>, <code>127.0.0.1:4100</code>, Tailscale IP, Funnel domain.</li>
+  <li><strong>GATE_HASH hardcoded fallback removed:</strong> <code>GATE_HASH</code> is now required from .env with no built-in default. Server warns if missing, rejects all remote logins.</li>
+  <li><strong>Admin override moved to env:</strong> Plaintext <code>ReportMe26</code> replaced with <code>ADMIN_OVERRIDE_HASH</code> env var (SHA-256 hex). Compared via <code>crypto.timingSafeEqual()</code>.</li>
+  <li><strong>Generic error responses:</strong> All endpoint error handlers now return <code>{ ok: false, error: "server_error" }</code> instead of exposing <code>err.message</code> to clients.</li>
+  <li><strong>minimatch audit fix:</strong> Resolved known vulnerability in minimatch dependency.</li>
+  <li><strong>Symlink fix:</strong> Replaced <code>npm link</code> symlink for <code>@hosage/web-search</code> with real <code>cp -R</code> copy. Symlinks break inside Electron asar archives, causing backend startup failures in packaged app.</li>
+  <li><strong>GitHub org:</strong> Created <code>axle-inc</code> GitHub organization. Pushed private copy of Spectra to <code>axle-inc/spectra</code>. Primary repo remains <code>hosagealexAxle/spectra</code>.</li>
+  <li><strong>Rebuilt + deployed</strong> Spectra.app with all security fixes. Verified reports still accessible, chat functional, remote access working.</li>
+</ul>
+
+<h3>Session 5: Feb 26&ndash;27, 2026 <span class="tag">COMPLETE</span></h3>
+<ul>
+  <li><strong>Tailscale Funnel remote access:</strong> Enabled public HTTPS URL (<code>alexs-mac-mini.tailb26e42.ts.net</code>) for external beta testers. No Tailscale install required for testers.</li>
+  <li><strong>Server-side password authentication:</strong> SHA-256 hashed password with <code>crypto.timingSafeEqual()</code> for timing-safe comparison. 30-day HttpOnly cookie sessions. No plaintext password in source code.</li>
+  <li><strong>Auth middleware ordering fix:</strong> Moved auth middleware BEFORE <code>express.static</code> so dashboard HTML/JS/CSS is blocked for unauthenticated remote users (not just API calls).</li>
+  <li><strong>Funnel localhost bypass fix:</strong> Tailscale Funnel proxies through 127.0.0.1, so auth middleware checks <code>X-Forwarded-For</code> header to distinguish real Electron requests from Funnel-proxied remote requests.</li>
+  <li><strong>Dashboard API_BASE fix:</strong> Changed from <code>http://${host}:4100</code> to <code>window.location.origin</code> for Funnel compatibility. Funnel serves on HTTPS port 443, not 4100.</li>
+  <li><strong>Cleared all chat history</strong> for fresh tester experience (deleted all threads + messages).</li>
+  <li><strong>Login page:</strong> Inline SPECTRA-branded dark theme login page served for unauthenticated remote requests. Password field + unlock button.</li>
+  <li><strong>Auth endpoints:</strong> POST /api/auth/login (validate + set cookie), GET /api/auth/check, POST /api/auth/logout (clear cookie). Health and auth endpoints bypass middleware.</li>
+  <li class="resolved"><strong>FIRST EXTERNAL BETA TESTER CONNECTED</strong> &mdash; Feb 27. Shared password-protected Funnel URL + PWA install instructions for iPhone/Android.</li>
+</ul>
+
+<h3>Session 4: Feb 26, 2026 <span class="tag">COMPLETE</span></h3>
+<ul>
+  <li><strong>Deep Fetch v4:</strong> Completely rewrote web intelligence gathering. Report engine now reads actual company websites, not just ~500-char search snippets.</li>
+  <li>Added <code>fetchPages()</code> to <code>@hosage/web-search</code> &mdash; wraps Tavily Extract API for full page content extraction (1 credit per 5 URLs, chunks of 20, 3-retry)</li>
+  <li>Added <code>formatDeepResults()</code> to formatter &mdash; prefers <code>rawContent</code> (full page text) over snippet, 3,000 chars/result, 20K total</li>
+  <li>Added <code>includeRawContent: "markdown"</code> passthrough to <code>webSearch()</code> &mdash; gets full page text at zero extra Tavily credit cost</li>
+  <li>Added <code>COMPANY_REGISTRY</code> to search-map.js &mdash; 17 seed vendors with name, ticker, type. Zero bias &mdash; every company gets identical queries.</li>
+  <li>Added <code>generateCompanyQueries()</code> &mdash; returns 4&ndash;5 targeted queries per company (products, deployments, launches, contracts, earnings)</li>
+  <li>Added <code>DEEP_SEARCH_MAP</code> &mdash; 8 advanced-depth searches for legislation and grants</li>
+  <li>Rewrote report-engine.js pre-fetch into <strong>3 phases</strong>:
+    <ul>
+      <li>Phase 1: Static searches (57 queries, upgraded with rawContent + maxResults 8)</li>
+      <li>Phase 2: A1a Claude calls run early, <code>discoverNewCompanies()</code> parses output for up to 8 additional vendors</li>
+      <li>Phase 3: Per-company deep searches (~85 queries) + Tavily Extract for vendor website pages + deep legislation/grants</li>
+    </ul>
+  </li>
+  <li>Upgraded VS context injection: A1aContext raised to 6,000 chars + per-company search results + extracted website pages</li>
+  <li>Added deep legislation cache injection into B1 steps, deep grants cache into B2 steps</li>
+  <li>Added <strong>GitHub Pages report archive</strong> with versioned history (index.html version picker, individual report pages, password-gated)</li>
+  <li class="resolved"><strong>REPORT GENERATED SUCCESSFULLY</strong> &mdash; Feb 26, 3:36 AM. 40/40 steps, 1.7MB HTML, 191 Tavily credits, ~$11.91 total cost ($35.75 &rarr; $23.84). 150 min 46 sec generation time. Deployed to GitHub Pages archive.</li>
+</ul>
 
 <h3>Session 3: Feb 25, 2026 <span class="tag">COMPLETE</span></h3>
 <ul>
@@ -448,8 +554,8 @@ cd backend && npx prisma migrate dev --name description</pre>
 </ul>
 
 <div class="footer">
-  <p>SPECTRA v3 &mdash; Claude Opus Powered &mdash; 40-Call Research Engine &mdash; Checkpoint/Resume &mdash; Tavily Web Intelligence &mdash; Key Facts Memory &mdash; File Browser &mdash; Mobile PWA</p>
-  <p>Generated February 25, 2026</p>
+  <p>SPECTRA v4.2 &mdash; Deep Fetch Engine &mdash; Claude Opus 4.6 &mdash; 40 API Calls &mdash; 191 Tavily Searches + Page Extraction &mdash; Tailscale Funnel Remote Access &mdash; Security Hardened (Helmet + Rate Limiting + CORS + Env-Only Secrets)</p>
+  <p>Updated March 1, 2026</p>
 </div>
 
 </body>
