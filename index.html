@@ -2,25 +2,253 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Spectra Project Status — March 2, 2026</title>
+<title>Spectra v4.3 — CEIA Pricing Intelligence Engine</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #1a1a1a; padding: 48px 56px; max-width: 850px; margin: 0 auto; line-height: 1.5; }
-  h1 { font-size: 32px; text-align: center; margin-bottom: 2px; }
-  .subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 2px solid #e0e0e0; }
-  h2 { font-size: 22px; margin-top: 32px; margin-bottom: 12px; }
-  h3 { font-size: 16px; margin-top: 20px; margin-bottom: 8px; }
-  p, li { font-size: 14px; margin-bottom: 6px; }
-  ul { padding-left: 20px; margin-bottom: 12px; }
-  li { margin-bottom: 4px; }
-  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
-  th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
-  th { background: #f5f5f5; font-weight: 600; }
+
+  /* ── Hero / Executive Summary ── */
+  .hero {
+    background: linear-gradient(135deg, #0a0e13 0%, #111820 40%, #1a1510 100%);
+    color: #e8e8e8;
+    padding: 0;
+    min-height: 100vh;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+  .hero-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 40px 60px;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #e8a317, #d4950f);
+    color: #0a0e13;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+  .hero-title {
+    font-size: 38px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+  .hero-subtitle {
+    font-size: 18px;
+    color: #e8a317;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+  .hero-date {
+    font-size: 13px;
+    color: #667;
+    margin-bottom: 36px;
+  }
+  .hero-overview {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #c8c8c8;
+    margin-bottom: 32px;
+    max-width: 780px;
+  }
+  .hero-overview strong { color: #e8a317; }
+
+  /* Stats strip */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .stat-card {
+    background: rgba(232, 163, 23, 0.08);
+    border: 1px solid rgba(232, 163, 23, 0.2);
+    border-radius: 8px;
+    padding: 16px 14px;
+    text-align: center;
+  }
+  .stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: #e8a317;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: #889;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Hero sections */
+  .hero h2 {
+    font-size: 20px;
+    color: #fff;
+    margin: 36px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(232, 163, 23, 0.25);
+  }
+  .hero h3 {
+    font-size: 15px;
+    color: #e8a317;
+    margin: 24px 0 10px;
+  }
+
+  /* Hero tables */
+  .hero table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 12px 0 20px;
+  }
+  .hero th {
+    background: rgba(232, 163, 23, 0.12);
+    color: #e8a317;
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 2px solid rgba(232, 163, 23, 0.3);
+  }
+  .hero td {
+    padding: 9px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    color: #c8c8c8;
+  }
+  .hero td strong { color: #e8a317; }
+  .hero tr:hover td { background: rgba(232, 163, 23, 0.04); }
+
+  /* Hero lists */
+  .hero ol, .hero ul { padding-left: 22px; margin: 8px 0 16px; }
+  .hero li {
+    font-size: 13px;
+    color: #c8c8c8;
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+  .hero li strong { color: #e8e8e8; }
+
+  /* Phase cards */
+  .phase-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0 24px;
+  }
+  .phase-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 18px 16px;
+  }
+  .phase-card-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #e8a317;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .phase-card ul { padding-left: 16px; margin: 0; }
+  .phase-card li { font-size: 12px; color: #aab; margin-bottom: 4px; }
+
+  /* System state bar */
+  .system-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 16px 0 32px;
+  }
+  .system-bar-item {
+    background: rgba(255,255,255,0.03);
+    padding: 12px 16px;
+  }
+  .system-bar-item .sys-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #667;
+    margin-bottom: 3px;
+  }
+  .system-bar-item .sys-value {
+    font-size: 13px;
+    color: #c8c8c8;
+  }
+
+  /* CTA / scroll prompt */
+  .hero-cta {
+    text-align: center;
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .hero-cta a {
+    display: inline-block;
+    background: rgba(232, 163, 23, 0.12);
+    color: #e8a317;
+    text-decoration: none;
+    padding: 12px 32px;
+    border-radius: 6px;
+    border: 1px solid rgba(232, 163, 23, 0.3);
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  .hero-cta a:hover { background: rgba(232, 163, 23, 0.2); }
+  .hero-cta p {
+    font-size: 12px;
+    color: #556;
+    margin-top: 10px;
+  }
+
+  /* ── Full Report Section ── */
+  .full-report {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: #1a1a1a;
+    padding: 48px 56px;
+    max-width: 900px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+  .report-divider {
+    text-align: center;
+    padding: 40px 0;
+    background: linear-gradient(180deg, #0a0e13, #f8f8f8);
+  }
+  .report-divider h2 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 4px;
+  }
+  .report-divider p {
+    font-size: 13px;
+    color: #888;
+  }
+  .full-report h1 { font-size: 32px; text-align: center; margin-bottom: 2px; }
+  .full-report .subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 2px solid #e0e0e0; }
+  .full-report h2 { font-size: 22px; margin-top: 32px; margin-bottom: 12px; }
+  .full-report h3 { font-size: 16px; margin-top: 20px; margin-bottom: 8px; }
+  .full-report p, .full-report li { font-size: 14px; margin-bottom: 6px; }
+  .full-report ul { padding-left: 20px; margin-bottom: 12px; }
+  .full-report li { margin-bottom: 4px; }
+  .full-report table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  .full-report th, .full-report td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
+  .full-report th { background: #f5f5f5; font-weight: 600; }
   .complete { color: #2e7d32; font-weight: 600; }
   .pending { color: #e65100; font-weight: 600; }
   .new { color: #1565c0; font-weight: 600; }
   .resolved { color: #2e7d32; font-weight: 600; }
   code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 12px; font-family: 'SF Mono', Menlo, monospace; }
+  .hero code { background: rgba(255,255,255,0.08); color: #e8a317; }
   pre { background: #f5f5f5; padding: 12px; border-radius: 6px; font-size: 12px; font-family: 'SF Mono', Menlo, monospace; margin: 8px 0; overflow-x: auto; white-space: pre-wrap; }
   .footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #e0e0e0; text-align: center; color: #999; font-size: 12px; }
   .tag { display: inline-block; background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-right: 4px; }
@@ -29,21 +257,32 @@
   .tag.teal { background: #e0f2f1; color: #00695c; }
   .section-new { background: #f0f7ff; border-left: 3px solid #1565c0; padding: 12px 16px; margin: 12px 0; border-radius: 0 6px 6px 0; }
   .section-done { background: #f0fff0; border-left: 3px solid #2e7d32; padding: 12px 16px; margin: 12px 0; border-radius: 0 6px 6px 0; }
-  @media print { body { padding: 24px 36px; } }
+  @media print { .hero { min-height: auto; } .full-report { padding: 24px 36px; } }
+  @media (max-width: 640px) {
+    .hero-inner { padding: 32px 20px 40px; }
+    .hero-title { font-size: 26px; }
+    .stats-strip { grid-template-columns: repeat(2, 1fr); }
+    .phase-grid { grid-template-columns: 1fr; }
+    .system-bar { grid-template-columns: 1fr; }
+    .full-report { padding: 24px 20px; }
+  }
+
+  /* ── Auth Gate ── */
   #auth-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0e13; display: flex; align-items: center; justify-content: center; z-index: 9999; }
   #auth-gate .gate-box { background: #141a22; border: 1px solid #1e2a36; border-radius: 12px; padding: 40px 36px; text-align: center; max-width: 360px; width: 90%; }
-  #auth-gate h2 { color: #00D2BE; font-size: 20px; margin-bottom: 4px; }
+  #auth-gate h2 { color: #e8a317; font-size: 20px; margin-bottom: 4px; }
   #auth-gate p { color: #667; font-size: 13px; margin-bottom: 20px; }
   #auth-gate input { width: 100%; padding: 10px 14px; border: 1px solid #1e2a36; border-radius: 6px; background: #0a0e13; color: #e0e0e0; font-size: 14px; outline: none; margin-bottom: 12px; }
-  #auth-gate input:focus { border-color: #00D2BE; }
-  #auth-gate button { width: 100%; padding: 10px; background: #00D2BE; color: #0a0e13; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
-  #auth-gate button:hover { background: #00b8a6; }
+  #auth-gate input:focus { border-color: #e8a317; }
+  #auth-gate button { width: 100%; padding: 10px; background: #e8a317; color: #0a0e13; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  #auth-gate button:hover { background: #d4950f; }
   #auth-gate .error { color: #e65100; font-size: 12px; margin-top: 8px; display: none; }
   body.locked { overflow: hidden; }
 </style>
 </head>
 <body class="locked">
 
+<!-- ── Auth Gate ── -->
 <div id="auth-gate">
   <div class="gate-box">
     <h2>SPECTRA</h2>
@@ -73,12 +312,213 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
 }
 </script>
 
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- EXECUTIVE SUMMARY — FRONT PAGE                                       -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="hero">
+<div class="hero-inner">
+
+  <div class="hero-badge">Pricing Intelligence</div>
+  <h1 class="hero-title">SPECTRA v4.3</h1>
+  <div class="hero-subtitle">CEIA Competitive Pricing Intelligence Report Engine</div>
+  <div class="hero-date">March 5, 2026 &mdash; Alex Hosage</div>
+
+  <p class="hero-overview">
+    Spectra v4.3 introduces a second report type: the <strong>CEIA Competitive Pricing Intelligence Report</strong> &mdash; a deep-dive engine purpose-built to scour the internet for current CEIA weapons detection pricing data. It leverages Spectra's existing infrastructure (Claude Opus 4.6, Tavily web search, checkpoint/resume) but with hyper-focused prompts, <strong>triple the search density</strong>, anti-bot spacing, and domain-targeted procurement database queries. All data targets <strong>2025&ndash;2026 pricing only, heavy on 2026</strong>.
+  </p>
+
+  <!-- Stats -->
+  <div class="stats-strip">
+    <div class="stat-card">
+      <div class="stat-value">18</div>
+      <div class="stat-label">API Calls (Opus)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">~158</div>
+      <div class="stat-label">Web Searches</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">12</div>
+      <div class="stat-label">Domain-Targeted</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">25</div>
+      <div class="stat-label">Page Extractions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">~$6.50</div>
+      <div class="stat-label">Cost Per Report</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">10</div>
+      <div class="stat-label">Output Sections</div>
+    </div>
+  </div>
+
+  <!-- Anti-Bot Strategy -->
+  <h2>Anti-Bot Search Strategy</h2>
+  <p style="font-size:13px; color:#889; margin-bottom:12px;">Designed to avoid rate limiting and bot detection across government and vendor sites.</p>
+  <table>
+    <tr><th>Parameter</th><th>Market Report</th><th>Pricing Report</th></tr>
+    <tr><td>Query delay</td><td>500ms</td><td><strong>1,500ms</strong></td></tr>
+    <tr><td>Group delay</td><td>N/A</td><td><strong>3,000ms</strong></td></tr>
+    <tr><td>Domain-targeted delay</td><td>N/A</td><td><strong>2,000ms</strong></td></tr>
+    <tr><td>Step cooldown</td><td>1,000ms</td><td><strong>1,500ms</strong></td></tr>
+    <tr><td>Domain-targeted searches</td><td>No</td><td><strong>Yes</strong></td></tr>
+    <tr><td>Deep query depth</td><td>Basic + some advanced</td><td><strong>All advanced</strong></td></tr>
+  </table>
+
+  <!-- Data Collection -->
+  <h2>Data Collection: 3-Phase Pre-Fetch (~158 Searches)</h2>
+
+  <h3>Phase 1 &mdash; Step Searches (~134 queries)</h3>
+  <p style="font-size:13px; color:#aab; margin-bottom:6px;">134 queries across 13 intelligence groups covering products, hardware pricing, software/services, installation, distribution, federal/state government, K-12, venues, municipal RFPs, and competitive analysis (Evolv, legacy vendors, AI competitors). 8 results per query, raw content included.</p>
+
+  <h3>Phase 2 &mdash; Domain-Targeted (~12 queries)</h3>
+  <p style="font-size:13px; color:#aab; margin-bottom:6px;">Restricted searches against sam.gov, GSA Advantage, ceia-usa.com/ceia.net, BidNet, and GovWin. Advanced search depth, 10 results each. Pulls actual contract records and procurement listings.</p>
+
+  <h3>Phase 3 &mdash; Deep Fetch (12 queries + page extraction)</h3>
+  <p style="font-size:13px; color:#aab; margin-bottom:16px;">Extracts full page content from up to 25 high-value URLs found in Phases 1&ndash;2. Runs 12 additional advanced searches focused on government contract values, school procurement records, and competitive pricing intelligence.</p>
+
+  <!-- 4 Phases -->
+  <h2>Report Generation: 4 Phases, 18 Calls</h2>
+
+  <div class="phase-grid">
+    <div class="phase-card">
+      <div class="phase-card-title">Phase 1 &mdash; Product &amp; Pricing Foundation (5 calls)</div>
+      <ul>
+        <li>Complete CEIA product catalog (walkthroughs, handhelds, software, accessories)</li>
+        <li>Hardware pricing (unit, volume, MSRP, price history)</li>
+        <li>Software licenses, maintenance, calibration, training, repair costs</li>
+        <li>Installation &amp; deployment costs (labor, site survey, integration)</li>
+        <li>Distribution chain pricing (CEIA USA, distributors, GSA, cooperative purchasing)</li>
+      </ul>
+    </div>
+    <div class="phase-card">
+      <div class="phase-card-title">Phase 2 &mdash; Procurement Intelligence (5 calls)</div>
+      <ul>
+        <li>Federal contracts (GSA schedule, DHS, TSA, courthouse, military &mdash; contract #s &amp; values)</li>
+        <li>State contracts (NASPO, Sourcewell, OMNIA, state-specific cooperative purchasing)</li>
+        <li>K-12 education (bid tabs, board approvals, grant-funded, per-unit pricing)</li>
+        <li>Venues &amp; municipal (stadiums, arenas, casinos, convention centers &mdash; dollar amounts)</li>
+        <li>Municipal procurement &amp; RFP analysis (courthouse, healthcare, transit, sole source)</li>
+      </ul>
+    </div>
+    <div class="phase-card">
+      <div class="phase-card-title">Phase 3 &mdash; Competitive Analysis (4 calls)</div>
+      <ul>
+        <li>CEIA vs Evolv (hardware cost, subscription vs purchase, 5-year TCO)</li>
+        <li>CEIA vs Garrett, Smiths, Rapiscan (unit pricing, service costs, positioning)</li>
+        <li>CEIA vs Xtract One, Liberty Defense, Athena (cost-per-technology, migration costs)</li>
+        <li>Total Cost of Ownership (single unit through 25+ unit deployments, 5-year TCO, ROI)</li>
+      </ul>
+    </div>
+    <div class="phase-card">
+      <div class="phase-card-title">Phase 4 &mdash; Synthesis (4 calls)</div>
+      <ul>
+        <li>Pricing trends, negotiation tactics, procurement timing, 12&ndash;24 month forecast</li>
+        <li>Top 20 findings brief, per-product summary, data quality assessment</li>
+        <li>Executive summary with 10 key findings (dollar amounts, competitive landscape, guidance)</li>
+        <li>Quality control (price reasonableness, source verification, consistency, gap analysis)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Output Sections -->
+  <h2>Report Output: 10 Sections</h2>
+  <ol>
+    <li><strong>Executive Summary</strong></li>
+    <li><strong>CEIA Complete Product Line</strong></li>
+    <li><strong>Hardware, Software &amp; Service Pricing</strong></li>
+    <li><strong>Installation, Training &amp; Distribution</strong></li>
+    <li><strong>Government Contracts &amp; Procurement Records</strong></li>
+    <li><strong>K-12 &amp; Education Sector Pricing</strong></li>
+    <li><strong>Venues, Municipal &amp; Healthcare Pricing</strong></li>
+    <li><strong>Competitive Pricing Analysis</strong></li>
+    <li><strong>Total Cost of Ownership</strong></li>
+    <li><strong>Pricing Intelligence &amp; Negotiation Insights</strong></li>
+  </ol>
+
+  <!-- Presentation -->
+  <h2>Presentation</h2>
+  <table>
+    <tr><th>Element</th><th>Style</th></tr>
+    <tr><td>Cover page</td><td>Dark gradient with gold accent (#e8a317), "Pricing Intelligence" badge, CEIA vendor branding</td></tr>
+    <tr><td>Table headers</td><td>Dark background with gold bottom border (distinct from teal market reports)</td></tr>
+    <tr><td>Blockquotes</td><td>Gold left border on cream background</td></tr>
+    <tr><td>Output location</td><td><code>~/Desktop/Spectra Reports/</code></td></tr>
+  </table>
+
+  <!-- Current System State -->
+  <h2>Current System State</h2>
+  <div class="system-bar">
+    <div class="system-bar-item">
+      <div class="sys-label">Desktop App</div>
+      <div class="sys-value">Spectra.app (Electron, unsigned)</div>
+    </div>
+    <div class="system-bar-item">
+      <div class="sys-label">Backend</div>
+      <div class="sys-value">Express 5, port 4100, 0.0.0.0</div>
+    </div>
+    <div class="system-bar-item">
+      <div class="sys-label">Database</div>
+      <div class="sys-value">SQLite, 6 Prisma models, auto-migrate</div>
+    </div>
+    <div class="system-bar-item">
+      <div class="sys-label">Chat LLM</div>
+      <div class="sys-value">Claude Sonnet 4.6 / GPT-4.1-mini fallback</div>
+    </div>
+    <div class="system-bar-item">
+      <div class="sys-label">Report LLM</div>
+      <div class="sys-value">Claude Opus 4.6, checkpoint/resume</div>
+    </div>
+    <div class="system-bar-item">
+      <div class="sys-label">Web Search</div>
+      <div class="sys-value">Tavily API via @hosage/web-search</div>
+    </div>
+    <div class="system-bar-item">
+      <div class="sys-label">Report Types</div>
+      <div class="sys-value">Market (40 steps, ~191) &bull; Pricing (18 steps, ~158)</div>
+    </div>
+    <div class="system-bar-item">
+      <div class="sys-label">Remote Access</div>
+      <div class="sys-value">Tailscale Funnel, SHA-256 + cookie auth</div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="hero-cta">
+    <a href="#full-report">Full Technical Report &darr;</a>
+    <p>Complete project documentation, architecture, API endpoints, session history</p>
+  </div>
+
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- TRANSITION                                                           -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="report-divider" id="full-report">
+  <h2>SPECTRA &mdash; Full Project Documentation</h2>
+  <p>Complete technical reference &mdash; architecture, engines, API, build, history</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- FULL REPORT — EXISTING CONTENT                                       -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="full-report">
+
 <h1>SPECTRA Research Platform</h1>
-<div class="subtitle">Project Status &mdash; March 2, 2026 (v4.2 &mdash; Security Hardening + GitHub Org)</div>
+<div class="subtitle">Project Status &mdash; March 5, 2026 (v4.3 &mdash; CEIA Pricing Intelligence Report Type)</div>
 
 <h2>Executive Summary</h2>
 <p><strong>SPECTRA</strong> (Strategic Physical Ecosystem: Comprehensive Threat-detection Research Agent) is an AI-powered research platform for the weapons detection industry. It runs as a macOS Electron desktop app with a Node.js + Prisma backend, Claude (Anthropic) as the primary LLM, and a React dashboard accessible both locally and via <strong>Tailscale Funnel</strong> (public HTTPS) for remote testers.</p>
-<p>The system generates deep, unbiased 11-section strategic research reports using Claude Opus 4.6, with <strong>40 API calls per report</strong> across 5 phases for maximum depth. It includes <strong>checkpoint/resume</strong> for fault tolerance, <strong>Deep Fetch web intelligence</strong> (191 Tavily searches + full page extraction) for current data, and a persistent chat interface with Claude Sonnet 4.6 and a knowledge base (Key Facts) for contextual memory.</p>
+<p>The system generates deep, unbiased strategic research reports using Claude Opus 4.6. <strong>Two report types available:</strong> Full Market Report (40 API calls, 11 sections, ~191 web searches) and CEIA Pricing Intelligence Report (18 API calls, 10 sections, ~158 web searches with anti-bot spacing). Both include <strong>checkpoint/resume</strong> for fault tolerance, <strong>Deep Fetch web intelligence</strong> for current data, and a persistent chat interface with Claude Sonnet 4.6 and a knowledge base (Key Facts) for contextual memory.</p>
+
+<div class="section-new">
+<strong>New (Mar 5, v4.3): CEIA Pricing Intelligence Report Type</strong><br>
+Added second report type alongside the existing full market report. Dashboard now shows a <strong>report type toggle</strong> (Full Market Report / CEIA Pricing Intel) in the Generate Report card. The pricing report runs <strong>18 Claude Opus calls</strong> across 4 phases with <strong>~158 Tavily searches</strong> (triple density) using anti-bot spacing (1.5s between queries, 3s between groups). Includes <strong>domain-targeted searches</strong> against sam.gov, GSA Advantage, CEIA official sites, and procurement databases. All queries focused on <strong>2025-2026 pricing only</strong> (heavy on 2026). New files: <code>pricing-report-engine.js</code> (~850 lines), <code>pricing-search-map.js</code> (~230 lines). Added <code>reportType</code> field to Prisma Report model with migration. Dynamic progress bar and section rendering in dashboard based on report type. Report output has gold accent cover page with "Pricing Intelligence" badge.
+</div>
 
 <div class="section-done">
 <strong>SUCCESS (Feb 26, 3:36 AM):</strong> Deep Fetch v4 report generated successfully. 1.7MB HTML, 40/40 steps, <strong>191 Tavily searches</strong> + per-company page extraction. <strong>Cost: ~$11.91</strong> ($35.75 &rarr; $23.84). 3-phase pre-fetch: static searches with full page content (Phase 1), early A1a calls + company discovery (Phase 2), per-company deep searches + Tavily Extract for actual website pages (Phase 3). Generation time: 150 min 46 sec. Report archive now live on GitHub Pages with version history.
@@ -105,8 +545,8 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
   <tr><td>Dashboard</td><td>React 19 + Vite 7</td><td>SPA with chat, reports, file browser, key facts. <code>API_BASE</code> uses <code>window.location.origin</code> for Funnel compatibility.</td></tr>
   <tr><td>Database</td><td>SQLite + Prisma 6</td><td>6 models, auto-migrates on startup</td></tr>
   <tr><td>Chat LLM</td><td>Claude Sonnet 4.6</td><td>Primary chat. OpenAI GPT-4.1-mini fallback</td></tr>
-  <tr><td>Report LLM</td><td>Claude Opus 4.6</td><td>40 calls via @anthropic-ai/sdk, max_tokens=10000 (14000 for summaries), checkpoint/resume</td></tr>
-  <tr><td>Web Search</td><td>Tavily API</td><td>191 searches/report (3-phase deep fetch + page extraction), 30-min TTL cache, shared package</td></tr>
+  <tr><td>Report LLM</td><td>Claude Opus 4.6</td><td>Market: 40 calls, Pricing: 18 calls. @anthropic-ai/sdk, max_tokens=10000 (14000 for summaries), checkpoint/resume</td></tr>
+  <tr><td>Web Search</td><td>Tavily API</td><td>Market: ~191 searches. Pricing: ~158 searches (anti-bot: 1.5s/query, 3s/group) + domain-targeted (sam.gov, GSA, CEIA). 30-min TTL cache, shared package</td></tr>
   <tr><td>Color Theme</td><td>Dark + Teal</td><td>Background: #0a0e13, Accent: #00D2BE</td></tr>
 </table>
 
@@ -127,10 +567,12 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
 <table>
   <tr><th>File / Folder</th><th>Contents</th></tr>
   <tr><td>backend/src/server.js</td><td>~660 lines &mdash; Express 5 API, 23+ endpoints, server-side auth gate (SHA-256 + cookie), helmet, rate limiting, restricted CORS, chat (with web search), reports, key facts, file browser</td></tr>
-  <tr><td>backend/src/report-engine.js</td><td>~2,100 lines &mdash; 40-call report pipeline, 5-phase architecture, 3-phase deep fetch pre-fetch, company discovery, per-company page extraction</td></tr>
+  <tr><td>backend/src/report-engine.js</td><td>~2,100 lines &mdash; 40-call market report pipeline, 5-phase architecture, 3-phase deep fetch pre-fetch, company discovery, per-company page extraction</td></tr>
+  <tr><td>backend/src/pricing-report-engine.js</td><td><span class="tag blue">NEW</span> ~850 lines &mdash; 18-call CEIA pricing report pipeline, 4-phase architecture, 3-phase pre-fetch with anti-bot spacing + domain-targeted searches (sam.gov, GSA, CEIA sites)</td></tr>
   <tr><td>backend/src/search-map.js</td><td>~275 lines &mdash; Static map of 57 Tavily queries across 26 steps + COMPANY_REGISTRY (17 vendors), generateCompanyQueries(), DEEP_SEARCH_MAP (legislation/grants)</td></tr>
-  <tr><td>backend/prisma/schema.prisma</td><td>6 models: Thread, Message, Report, ReportRun, KeyFact, ActionLog</td></tr>
-  <tr><td>dashboard/src/App.jsx</td><td>~715 lines &mdash; Chat, reports viewer, key facts editor, file browser, progress tracking</td></tr>
+  <tr><td>backend/src/pricing-search-map.js</td><td><span class="tag blue">NEW</span> ~230 lines &mdash; 134 pricing queries across 13 step groups + 12 deep advanced searches + 12 domain-targeted searches (sam.gov, GSA Advantage, ceia-usa.com, procurement DBs)</td></tr>
+  <tr><td>backend/prisma/schema.prisma</td><td>6 models: Thread, Message, Report (+ reportType field), ReportRun, KeyFact, ActionLog</td></tr>
+  <tr><td>dashboard/src/App.jsx</td><td>~740 lines &mdash; Chat, reports viewer (dynamic sections by report type), report type toggle, key facts editor, file browser, progress tracking</td></tr>
   <tr><td>dashboard/src/index.css</td><td>Dark teal theme, mobile responsive, report rendering styles</td></tr>
   <tr><td>desktop/main.js</td><td>~135 lines &mdash; Electron entry, .env loading, health check, window config</td></tr>
   <tr><td>desktop/backend-runner.js</td><td>~38 lines &mdash; CJS bridge, auto-migration, dynamic ESM import</td></tr>
@@ -148,7 +590,7 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
   <tr><th>Model</th><th>Purpose</th><th>Key Fields</th></tr>
   <tr><td>Thread</td><td>Chat conversations</td><td>id, title, createdAt, updatedAt</td></tr>
   <tr><td>Message</td><td>Chat messages</td><td>threadId (FK), role, content, createdAt</td></tr>
-  <tr><td>Report</td><td>Research reports</td><td>title, status, contentJson, htmlPath, sections (0&ndash;35), modelUsed, errorMsg</td></tr>
+  <tr><td>Report</td><td>Research reports</td><td>title, <strong>reportType</strong> ("market"|"pricing", default "market"), status, contentJson, htmlPath, sections (0&ndash;40 market / 0&ndash;18 pricing), modelUsed, errorMsg</td></tr>
   <tr><td>ReportRun</td><td>Report execution history</td><td>reportId (FK), status, createdAt &mdash; used for rate limiting</td></tr>
   <tr><td>KeyFact</td><td>Persistent knowledge base</td><td>category (market/legislation/vendor/threat/note), content, source, pinned</td></tr>
   <tr><td>ActionLog</td><td>Audit trail</td><td>type, label, detail, ok, createdAt</td></tr>
@@ -277,6 +719,88 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
   <li><strong>Generation time:</strong> ~150 minutes (6 min pre-fetch + ~145 min Claude calls).</li>
 </ul>
 
+<h2>Pricing Report Engine (v1 &mdash; 18 API Calls + ~158 Web Searches + Domain-Targeted Deep Fetch)</h2>
+<p><span class="tag blue">NEW v4.3</span> A second report type focused exclusively on <strong>CEIA competitive pricing intelligence</strong>. Uses the same checkpoint/resume, Claude Opus, and Tavily infrastructure as the market report but with hyper-focused prompts, triple search density, and anti-bot spacing. All queries target <strong>2025-2026 pricing only</strong> (heavy on 2026).</p>
+
+<h3>Anti-Bot Search Strategy</h3>
+<table>
+  <tr><th>Parameter</th><th>Market Report</th><th>Pricing Report</th></tr>
+  <tr><td>Delay between queries</td><td>500ms</td><td><strong>1,500ms</strong></td></tr>
+  <tr><td>Delay between groups</td><td>N/A</td><td><strong>3,000ms</strong></td></tr>
+  <tr><td>Domain-targeted delay</td><td>N/A</td><td><strong>2,000ms</strong></td></tr>
+  <tr><td>Step cooldown</td><td>1,000ms</td><td><strong>1,500ms</strong></td></tr>
+  <tr><td>Domain-targeted searches</td><td>No</td><td><strong>Yes</strong> (sam.gov, GSA, CEIA sites, procurement DBs)</td></tr>
+  <tr><td>Search depth on deep queries</td><td>basic + some advanced</td><td><strong>All advanced</strong> for deep + domain searches</td></tr>
+</table>
+
+<h3>Pre-Fetch Phases (~158 Tavily credits)</h3>
+<table>
+  <tr><th>Phase</th><th>What It Does</th><th>Searches</th></tr>
+  <tr><td>Phase 1: Step Searches</td><td>134 queries across 13 step groups (PROD, HW_PRICE, SW_SVC, INST, DIST, GOV_FED, GOV_STATE, K12, VENUE, MUNI_RFP, COMP_EVOLV, COMP_LEGACY, COMP_AI). <code>includeRawContent</code>, 8 results each, 12K chars/step.</td><td>~134</td></tr>
+  <tr><td>Phase 2: Domain-Targeted</td><td>12 queries with <code>includeDomains</code> restriction: sam.gov (3), GSA (3), ceia-usa.com/ceia.net (4), bidnet/govwin (2). Advanced search depth, 10 results each.</td><td>~12</td></tr>
+  <tr><td>Phase 3: Deep Fetch</td><td>URL extraction from Phase 1+2 results (up to 15 CEIA URLs + 10 gov URLs). Tavily Extract for full page content. 12 advanced-depth searches (gov contracts, school procurement, pricing intel).</td><td>~12 + page extraction</td></tr>
+</table>
+
+<h3>Phase 1: Product &amp; Pricing Foundation (5 calls)</h3>
+<table>
+  <tr><th>Call</th><th>Section</th><th>Focus</th></tr>
+  <tr><td>PROD</td><td>CEIA Product Line</td><td>Complete catalog: walkthroughs (PMD2, SMD 601, OPENGATE), handhelds (PD240, CMD), software, accessories</td></tr>
+  <tr><td>HW_PRICE</td><td rowspan="2">Pricing</td><td>Hardware pricing: unit prices, volume pricing, MSRP, price history, discrepancy analysis</td></tr>
+  <tr><td>SW_SVC</td><td>Software licenses, service agreements, maintenance, calibration, training, repair costs</td></tr>
+  <tr><td>INST</td><td rowspan="2">Deployment</td><td>Installation labor, site survey, electrical, integration, project management costs</td></tr>
+  <tr><td>DIST</td><td>Distribution chain pricing: CEIA USA, distributors, dealers, resellers, GSA, cooperative purchasing</td></tr>
+</table>
+
+<h3>Phase 2: Procurement Intelligence (5 calls)</h3>
+<table>
+  <tr><th>Call</th><th>Section</th><th>Focus</th></tr>
+  <tr><td>GOV_FED</td><td rowspan="2">Government Contracts</td><td>Federal contracts: GSA schedule, FPDS, DHS, TSA, courthouse, military, VA. Contract #s and values.</td></tr>
+  <tr><td>GOV_STATE</td><td>State contracts: NASPO, Sourcewell, OMNIA, state-specific (TX, FL, CA, NY). Cooperative purchasing pricing.</td></tr>
+  <tr><td>K12</td><td>Education</td><td>School district purchases: bid tabs, board approvals, grant-funded, bulk buys. Per-unit pricing.</td></tr>
+  <tr><td>VENUE</td><td rowspan="2">Venues &amp; Municipal</td><td>Stadium, arena, convention center, casino, theme park contracts with dollar amounts.</td></tr>
+  <tr><td>MUNI_RFP</td><td>Municipal procurement, courthouse, healthcare, transit. RFP analysis, bid tabulations, sole source.</td></tr>
+</table>
+
+<h3>Phase 3: Competitive Analysis (4 calls)</h3>
+<table>
+  <tr><th>Call</th><th>Section</th><th>Focus</th></tr>
+  <tr><td>COMP_EVOLV</td><td rowspan="3">Competitive Pricing</td><td>CEIA vs Evolv: hardware cost, subscription vs purchase, 5-year TCO, capability-per-dollar</td></tr>
+  <tr><td>COMP_LEGACY</td><td>CEIA vs Garrett, Smiths, Rapiscan: unit pricing, service costs, market positioning</td></tr>
+  <tr><td>COMP_AI</td><td>CEIA vs Xtract One, Liberty Defense, Athena: cost-per-technology, migration costs, future trajectory</td></tr>
+  <tr><td>TCO</td><td>Total Cost of Ownership</td><td>Single unit, small (4), medium (10), large (25+) deployments. 5-year TCO. Hidden costs. ROI analysis.</td></tr>
+</table>
+
+<h3>Phase 4: Synthesis (4 calls)</h3>
+<table>
+  <tr><th>Call</th><th>Section</th><th>Focus</th></tr>
+  <tr><td>TRENDS</td><td>Intelligence</td><td>Pricing trends, volume discounts, negotiation tactics, procurement timing, market position, 12-24 month forecast</td></tr>
+  <tr><td>SUMMARY</td><td>Intelligence</td><td>Pricing brief: top 20 findings, per-product summary, competitive position, data quality assessment</td></tr>
+  <tr><td>EXEC</td><td>Executive Summary</td><td>10 key findings with dollar amounts, competitive landscape, TCO, negotiation guidance</td></tr>
+  <tr><td>QC</td><td>Intelligence</td><td>Price reasonableness check, source verification, consistency check, gaps, follow-up recommendations</td></tr>
+</table>
+
+<h3>Report Output: 10 Display Sections</h3>
+<ol>
+  <li><strong>Executive Summary</strong> (EXEC)</li>
+  <li><strong>CEIA Complete Product Line</strong> (PROD)</li>
+  <li><strong>Hardware, Software &amp; Service Pricing</strong> (HW_PRICE + SW_SVC)</li>
+  <li><strong>Installation, Training &amp; Distribution</strong> (INST + DIST)</li>
+  <li><strong>Government Contracts &amp; Procurement Records</strong> (GOV_FED + GOV_STATE)</li>
+  <li><strong>K-12 &amp; Education Sector Pricing</strong> (K12)</li>
+  <li><strong>Venues, Municipal &amp; Healthcare Pricing</strong> (VENUE + MUNI_RFP)</li>
+  <li><strong>Competitive Pricing Analysis</strong> (COMP_EVOLV + COMP_LEGACY + COMP_AI)</li>
+  <li><strong>Total Cost of Ownership</strong> (TCO)</li>
+  <li><strong>Pricing Intelligence &amp; Negotiation Insights</strong> (TRENDS + SUMMARY + QC)</li>
+</ol>
+
+<h3>Pricing Report HTML Output</h3>
+<ul>
+  <li>Cover page: dark gradient with <strong>gold accent</strong> (#e8a317) "Pricing Intelligence" badge, CEIA vendor name</li>
+  <li>Table headers: dark background with gold bottom border (vs teal in market report)</li>
+  <li>Blockquotes: gold left border on cream background</li>
+  <li>Saved to <code>~/Desktop/Spectra Reports/</code> alongside market reports</li>
+</ul>
+
 <h2>Chat Web Search</h2>
 <p>The Spectra chat endpoint detects current-events questions using keyword matching (<code>current</code>, <code>recent</code>, <code>latest</code>, <code>2025</code>, <code>2026</code>, <code>news</code>, etc.) and automatically runs a Tavily web search, injecting results into the system prompt before the LLM call.</p>
 <ul>
@@ -332,8 +856,8 @@ if (sessionStorage.getItem('spectra-auth') === '1') {
   <tr><td>GET</td><td>/api/reports</td><td>List all reports (20 most recent)</td></tr>
   <tr><td>GET</td><td>/api/reports/ratelimit/status</td><td>Rate limit info (runs this month, cooldown)</td></tr>
   <tr><td>GET</td><td>/api/reports/:id</td><td>Fetch full report details + contentJson</td></tr>
-  <tr><td>GET</td><td>/api/reports/:id/status</td><td>Quick status check (for progress polling)</td></tr>
-  <tr><td>POST</td><td>/api/reports/generate</td><td>Generate new report (admin auth required)</td></tr>
+  <tr><td>GET</td><td>/api/reports/:id/status</td><td>Quick status check (for progress polling). Returns <code>totalSteps</code> and <code>reportType</code>.</td></tr>
+  <tr><td>POST</td><td>/api/reports/generate</td><td>Generate new report. Accepts <code>reportType</code> ("market"|"pricing"). Routes to correct engine. Admin override supported.</td></tr>
 </table>
 
 <h3>Key Facts</h3>
@@ -442,18 +966,19 @@ cd backend && npx prisma migrate dev --name description</pre>
   <tr><td>Phase 11: Tavily Web Search Integration</td><td class="complete">COMPLETE</td></tr>
   <tr><td>Phase 12: Deep Fetch v4 (191 searches + page extraction)</td><td class="complete">COMPLETE &mdash; 3-phase pre-fetch, company registry, website extraction, versioned report archive</td></tr>
   <tr><td>Phase 13: Remote Access + Beta Testing</td><td class="complete">COMPLETE &mdash; Tailscale Funnel, server-side auth (SHA-256 + cookies), API_BASE fix, first external tester</td></tr>
-  <tr><td>Phase 14: Security Hardening + GitHub Org</td><td class="complete"><span class="tag blue">NEW</span> COMPLETE &mdash; helmet, rate limiting, CORS restriction, env-only secrets, generic errors, axle-inc GitHub org</td></tr>
+  <tr><td>Phase 14: Security Hardening + GitHub Org</td><td class="complete">COMPLETE &mdash; helmet, rate limiting, CORS restriction, env-only secrets, generic errors, axle-inc GitHub org</td></tr>
+  <tr><td>Phase 15: CEIA Pricing Intelligence Report</td><td class="complete"><span class="tag blue">NEW</span> COMPLETE &mdash; 18-step pricing engine, 158 web searches, anti-bot spacing, domain-targeted fetches, report type toggle in dashboard</td></tr>
 </table>
 
 <h2>Cost Summary</h2>
 <table>
-  <tr><th>Item</th><th>Per Report</th><th>Per Month (3 reports)</th></tr>
-  <tr><td>Claude Opus 4.6 (40 calls)</td><td>~$10</td><td>~$30</td></tr>
-  <tr><td>Tavily Deep Fetch (191 credits)</td><td>~$1.91</td><td>~$5.73</td></tr>
-  <tr><td>Chat (Sonnet + occasional Tavily)</td><td>&mdash;</td><td>~$2&ndash;5</td></tr>
-  <tr><td><strong>Total</strong></td><td><strong>~$12</strong></td><td><strong>~$38&ndash;41</strong></td></tr>
+  <tr><th>Report Type</th><th>Claude Opus</th><th>Tavily</th><th>Total Per Report</th></tr>
+  <tr><td>Full Market (40 calls, ~191 searches)</td><td>~$10</td><td>~$1.91</td><td><strong>~$12</strong></td></tr>
+  <tr><td>CEIA Pricing (18 calls, ~158 searches)</td><td>~$5</td><td>~$1.58</td><td><strong>~$6.50</strong></td></tr>
+  <tr><td colspan="3">Chat (Sonnet + occasional Tavily)</td><td>~$2&ndash;5/month</td></tr>
 </table>
-<p><strong>Actual measured:</strong> Feb 26 report cost $11.91 ($35.75 &rarr; $23.84). Feb 25 report cost ~$11.17.</p>
+<p><strong>Actual measured (market):</strong> Feb 26 report cost $11.91 ($35.75 &rarr; $23.84). Feb 25 report cost ~$11.17.</p>
+<p><strong>Estimated (pricing):</strong> ~$5 Claude (18 calls &times; ~$0.28) + ~$1.58 Tavily (158 credits) = ~$6.50/report. Faster generation (~15&ndash;20 min vs ~150 min).</p>
 
 <h2>Session History</h2>
 
@@ -554,9 +1079,11 @@ cd backend && npx prisma migrate dev --name description</pre>
 </ul>
 
 <div class="footer">
-  <p>SPECTRA v4.2 &mdash; Deep Fetch Engine &mdash; Claude Opus 4.6 &mdash; 40 API Calls &mdash; 191 Tavily Searches + Page Extraction &mdash; Tailscale Funnel Remote Access &mdash; Security Hardened (Helmet + Rate Limiting + CORS + Env-Only Secrets)</p>
-  <p>Updated March 1, 2026</p>
+  <p>SPECTRA v4.3 &mdash; Pricing Intelligence Engine + Deep Fetch &mdash; Claude Opus 4.6 &mdash; 40 + 18 API Calls &mdash; 191 + 158 Tavily Searches &mdash; Tailscale Funnel &mdash; Security Hardened</p>
+  <p>Updated March 5, 2026</p>
 </div>
+
+</div><!-- /full-report -->
 
 </body>
 </html>
